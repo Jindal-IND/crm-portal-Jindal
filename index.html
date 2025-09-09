@@ -3,99 +3,477 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRM Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>CRM JSSL – Dashboard</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SheetJS for .xlsx export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    body { padding: 20px; }
-    .card { margin-bottom: 20px; }
-    .filter-section { margin-bottom: 30px; }
+    .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100; }
+    .kpi { @apply flex flex-col gap-1 p-5 card; }
+    .nav-item { @apply text-gray-600 hover:text-gray-900 transition; }
+    .chip { @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700; }
+    .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm border border-gray-200 hover:bg-gray-50; }
+    .btn-primary { @apply bg-gray-900 text-white border-gray-900 hover:bg-black; }
+    .input { @apply w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20; }
+    .select { @apply input bg-white; }
+    .section-title { @apply text-sm font-semibold text-gray-700; }
+    .table { @apply min-w-full text-sm; }
+    .table th { @apply text-left font-semibold text-gray-600 py-3; }
+    .table td { @apply py-3 text-gray-700; }
+    .divider { @apply h-px bg-gray-100 my-4; }
   </style>
 </head>
-<body>
-  <h1 class="mb-4">CRM Dashboard</h1>
-
-  <div class="filter-section row">
-    <div class="col-md-3">
-      <label for="regionFilter">Region</label>
-      <select id="regionFilter" class="form-select"></select>
-    </div>
-    <div class="col-md-3">
-      <label for="camFilter">CAM Name</label>
-      <select id="camFilter" class="form-select"></select>
-    </div>
-    <div class="col-md-3">
-      <label for="dateRange">Date Range</label>
-      <input type="date" id="startDate" class="form-control mb-1">
-      <input type="date" id="endDate" class="form-control">
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <h5>Total Enquiries</h5>
-          <p id="totalEnquiries">0</p>
+<body class="bg-gray-50 text-gray-900">
+  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gray-900 text-white flex items-center justify-center font-bold">J</div>
+        <div>
+          <h1 class="text-lg font-semibold">CRM JSSL</h1>
+          <p class="text-xs text-gray-500">Sales Analytics & Enquiry Management</p>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center gap-6">
+        <a class="nav-item" href="#dashboard" onclick="showPage('dashboard')">Dashboard</a>
+        <a class="nav-item" href="#enquiries" onclick="showPage('enquiries')">Enquiries</a>
+        <a class="nav-item" href="#visits" onclick="showPage('visits')">Visits</a>
+        <a class="nav-item" href="#reports" onclick="showPage('reports')">Reports</a>
+        <a class="nav-item" href="#settings" onclick="showPage('settings')">Settings</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button id="addEnquiryBtn" class="btn btn-primary"><i data-lucide="plus"></i> Add Enquiry</button>
+        <button id="addVisitBtn" class="btn"><i data-lucide="calendar-plus"></i> Add Visit</button>
+        <div class="hidden sm:flex items-center gap-3 pl-3 ml-3 border-l border-gray-200">
+          <span class="chip">Logged in: <strong class="ml-1">Tanisha</strong></span>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <h5>Total Visits</h5>
-          <p id="totalVisits">0</p>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Pages container -->
+    <div id="page-dashboard" class="page">
+      <!-- Filters & KPIs -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-3 card p-4">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold">Filters</h2>
+            <button id="clearFilters" class="text-xs text-gray-500 hover:text-gray-800">Reset</button>
+          </div>
+          <div class="divider"></div>
+          <div class="space-y-3">
+            <div>
+              <label class="section-title">Region</label>
+              <select id="filterRegion" class="select mt-1">
+                <option value="">All Regions</option>
+                <option>North</option>
+                <option>South</option>
+                <option>Mumbai</option>
+                <option>Kolkata</option>
+                <option>Vadodara</option>
+              </select>
+            </div>
+            <div>
+              <label class="section-title">CAM</label>
+              <input id="filterCAM" class="input mt-1" placeholder="e.g., Rahul Sharma"/>
+            </div>
+            <div>
+              <label class="section-title">Date Range</label>
+              <div class="grid grid-cols-2 gap-2 mt-1">
+                <input id="filterFrom" type="date" class="input"/>
+                <input id="filterTo" type="date" class="input"/>
+              </div>
+            </div>
+            <div>
+              <label class="section-title">Customer</label>
+              <input id="filterCustomer" class="input mt-1" placeholder="Search customer"/>
+            </div>
+            <button id="applyFilters" class="btn w-full mt-2"><i data-lucide="sliders"></i> Apply Filters</button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-9 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="kpi"><span class="text-xs text-gray-500">Total Enquiries</span><span id="kpiEnquiries" class="text-2xl font-semibold">0</span><span id="kpiEnquiriesSub" class="text-xs text-gray-500">All regions</span></div>
+          <div class="kpi"><span class="text-xs text-gray-500">Total Visits</span><span id="kpiVisits" class="text-2xl font-semibold">0</span><span id="kpiVisitsSub" class="text-xs text-gray-500">All regions</span></div>
+          <div class="kpi"><span class="text-xs text-gray-500">Conversion Rate</span><span id="kpiConversion" class="text-2xl font-semibold">0%</span><span class="text-xs text-gray-500">Enquiries → Converted</span></div>
+          <div class="kpi"><span class="text-xs text-gray-500">Top CAM (This Month)</span><span id="kpiTopCAM" class="text-2xl font-semibold">–</span><span id="kpiTopCAMSub" class="text-xs text-gray-500">by enquiries</span></div>
+        </div>
+      </section>
+
+      <!-- Charts -->
+      <section class="mt-6 grid grid-cols-1 xl:grid-cols-12 gap-4">
+        <div class="xl:col-span-7 card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">Enquiries & Visits Trend</h3>
+            <span class="chip" id="trendChip">Monthly</span>
+          </div>
+          <canvas id="trendChart" height="120"></canvas>
+        </div>
+        <div class="xl:col-span-5 card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">Lost Reasons Breakdown</h3>
+            <span class="chip">% of Lost Qty</span>
+          </div>
+          <canvas id="lostChart" height="120"></canvas>
+        </div>
+
+        <div class="xl:col-span-6 card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">Region-wise Performance</h3>
+            <span class="chip">Enquiries vs Visits</span>
+          </div>
+          <canvas id="regionChart" height="120"></canvas>
+        </div>
+        <div class="xl:col-span-6 card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">CAM-wise Performance</h3>
+            <span class="chip">Top 5 CAMs</span>
+          </div>
+          <canvas id="camChart" height="120"></canvas>
+        </div>
+
+        <div class="xl:col-span-12 card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold">Conversion Funnel</h3>
+            <span class="chip">Enquiries → Visits → Converted → Orders</span>
+          </div>
+          <canvas id="funnelChart" height="120"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- Enquiries Page -->
+    <div id="page-enquiries" class="page hidden">
+      <div class="card p-4 mb-4 flex items-center justify-between">
+        <h3 class="font-semibold">Enquiries</h3>
+        <div class="flex items-center gap-2">
+          <button class="btn" id="exportEnquiriesXlsx"><i data-lucide="download"></i> Export Enquiries (.xlsx)</button>
+          <button class="btn btn-primary" id="openAddEnquiry"><i data-lucide="plus"></i> New Enquiry</button>
         </div>
       </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <h5>Visit-Enquiry Conversion</h5>
-          <p id="conversionRate">0%</p>
-        </div>
+
+      <div class="card p-4 overflow-x-auto">
+        <table class="table" id="enquiriesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Region</th>
+              <th>CAM</th>
+              <th>Status</th>
+              <th>Qty (Tons)</th>
+              <th>Lost Reason</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="enquiriesBody"></tbody>
+        </table>
       </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-md-12">
-      <canvas id="trendChart"></canvas>
+    <!-- Visits Page -->
+    <div id="page-visits" class="page hidden">
+      <div class="card p-4 mb-4 flex items-center justify-between">
+        <div>
+          <h3 class="font-semibold">Visits</h3>
+          <div class="text-sm text-gray-600 mt-1">Scheduled: <span id="visitsScheduled">0</span> • Completed: <span id="visitsCompleted">0</span></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="btn" id="exportVisitsXlsx"><i data-lucide="download"></i> Export Visits (.xlsx)</button>
+          <button class="btn" id="openAddVisit"><i data-lucide="calendar-plus"></i> New Visit</button>
+        </div>
+      </div>
+
+      <div class="card p-4 overflow-x-auto">
+        <table class="table" id="visitsTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Region</th>
+              <th>CAM</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="visitsBody"></tbody>
+        </table>
+      </div>
     </div>
-  </div>
 
-  <hr>
+    <!-- Reports & Settings (placeholders) -->
+    <div id="page-reports" class="page hidden card p-4">
+      <h3 class="font-semibold">Reports</h3>
+      <p class="text-sm text-gray-600 mt-2">Download monthly/quarterly performance, lost reason analysis, and CAM/Region summaries. (Prototype placeholder)</p>
+    </div>
 
-  <h3>Add / Edit Enquiry</h3>
-  <form id="enquiryForm">
-    <!-- Add inputs based on Enquiry table fields -->
-    <input type="text" placeholder="Customer Name" class="form-control mb-2" required>
-    <!-- more fields here -->
-    <button type="submit" class="btn btn-primary">Submit Enquiry</button>
-  </form>
+    <div id="page-settings" class="page hidden card p-4">
+      <h3 class="font-semibold">Settings</h3>
+      <p class="text-sm text-gray-600 mt-2">Manage Region–CAM–CRM mapping and user roles. (Prototype placeholder)</p>
+    </div>
+  </main>
 
-  <hr>
+  <!-- Enquiry Modal (for add/edit) -->
+  <dialog id="enquiryModal" class="rounded-2xl p-0 w-11/12 max-w-2xl">
+    <form method="dialog" class="card p-5">
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold" id="enqModalTitle">Add Enquiry</h3>
+        <button class="btn" type="button" onclick="document.getElementById('enquiryModal').close()"><i data-lucide='x'></i> Close</button>
+      </div>
+      <div class="divider"></div>
+      <input type="hidden" id="enqIndex" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="section-title">Date</label>
+          <input id="enqDate" type="date" class="input mt-1" required />
+        </div>
+        <div>
+          <label class="section-title">Customer Name</label>
+          <input id="enqCustomer" class="input mt-1" placeholder="Customer" required />
+        </div>
+        <div>
+          <label class="section-title">Region</label>
+          <input id="enqRegion" class="input mt-1" placeholder="Region" required />
+        </div>
+        <div>
+          <label class="section-title">CAM</label>
+          <input id="enqCAM" class="input mt-1" placeholder="CAM" required />
+        </div>
+        <div>
+          <label class="section-title">Status</label>
+          <select id="enqStatus" class="select mt-1">
+            <option>In Process</option>
+            <option>Converted</option>
+            <option>Lost</option>
+            <option>Win</option>
+          </select>
+        </div>
+        <div>
+          <label class="section-title">Qty (Tons)</label>
+          <input id="enqQty" type="number" step="0.01" class="input mt-1" placeholder="e.g., 12" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="section-title">Lost Reason (if Lost)</label>
+          <input id="enqReason" class="input mt-1" placeholder="Price / Competition / Delay / Others" />
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="flex items-center justify-end gap-2">
+        <button class="btn" type="button" onclick="document.getElementById('enquiryModal').close()">Cancel</button>
+        <button id="saveEnquiry" class="btn btn-primary" type="button">Save Enquiry</button>
+      </div>
+    </form>
+  </dialog>
 
-  <h3>Add / Edit Visit</h3>
-  <form id="visitForm">
-    <!-- Add inputs based on Visit table fields -->
-    <input type="text" placeholder="Customer Name" class="form-control mb-2" required>
-    <!-- more fields here -->
-    <button type="submit" class="btn btn-success">Submit Visit</button>
-  </form>
+  <!-- Visit Modal -->
+  <dialog id="visitModal" class="rounded-2xl p-0 w-11/12 max-w-2xl">
+    <form method="dialog" class="card p-5">
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold" id="visitModalTitle">Add Visit</h3>
+        <button class="btn" type="button" onclick="document.getElementById('visitModal').close()"><i data-lucide='x'></i> Close</button>
+      </div>
+      <div class="divider"></div>
+      <input type="hidden" id="visitIndex" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="section-title">Date</label>
+          <input id="visitDate" type="date" class="input mt-1" required />
+        </div>
+        <div>
+          <label class="section-title">Customer Name</label>
+          <input id="visitCustomer" class="input mt-1" placeholder="Customer" required />
+        </div>
+        <div>
+          <label class="section-title">Region</label>
+          <input id="visitRegion" class="input mt-1" placeholder="Region" required />
+        </div>
+        <div>
+          <label class="section-title">CAM</label>
+          <input id="visitCAM" class="input mt-1" placeholder="CAM" required />
+        </div>
+        <div>
+          <label class="section-title">Status</label>
+          <select id="visitStatus" class="select mt-1">
+            <option>Scheduled</option>
+            <option>Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="flex items-center justify-end gap-2">
+        <button class="btn" type="button" onclick="document.getElementById('visitModal').close()">Cancel</button>
+        <button id="saveVisit" class="btn btn-primary" type="button">Save Visit</button>
+      </div>
+    </form>
+  </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // JavaScript to populate data dynamically with Graph API will go here
-    // This includes: loading Excel data, applying filters, updating KPIs and charts
-    document.getElementById('enquiryForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('Enquiry submitted!');
+    lucide.createIcons();
+
+    // Demo data (same structure as before)
+    const demo = {
+      enquiries: [
+        { date: '2025-08-01', customer: 'Metro Steels', region: 'North', cam: 'Yogesh Sharma', status: 'Converted', qty: 12, reason: '' },
+        { date: '2025-08-02', customer: 'Shree Metals', region: 'South', cam: 'Sanjay Singh', status: 'In Process', qty: 18, reason: '' },
+        { date: '2025-08-03', customer: 'Omega Industries', region: 'Mumbai', cam: 'deerghayu tiwari', status: 'Lost', qty: 10, reason: 'Price' },
+        { date: '2025-08-05', customer: 'Eastern Alloys', region: 'Kolkata', cam: 'Priya Nair', status: 'Converted', qty: 16, reason: '' },
+        { date: '2025-08-09', customer: 'Bright Metals', region: 'Vadodara', cam: 'Rahul Sharma', status: 'Lost', qty: 8, reason: 'Competition' },
+        { date: '2025-08-12', customer: 'Prime Steel Co', region: 'North', cam: 'Rahul Sharma', status: 'In Process', qty: 21, reason: '' },
+      ],
+      visits: [
+        { date: '2025-08-01', customer: 'Metro Steels', region: 'North', cam: 'Yogesh Sharma', status: 'Completed' },
+        { date: '2025-08-03', customer: 'Omega Industries', region: 'Mumbai', cam: 'Sanjay Singh', status: 'Completed' },
+        { date: '2025-08-07', customer: 'Shree Metals', region: 'South', cam: 'Deerghayu Tiwari', status: 'Scheduled' },
+        { date: '2025-08-10', customer: 'Eastern Alloys', region: 'Kolkata', cam: 'Priya Nair', status: 'Completed' },
+        { date: '2025-08-15', customer: 'Prime Steel Co', region: 'North', cam: 'Rahul Sharma', status: 'Completed' },
+      ],
+    };
+
+    // Storage helpers
+    function loadData(){
+      const e = JSON.parse(localStorage.getItem('enquiries')||'[]');
+      const v = JSON.parse(localStorage.getItem('visits')||'[]');
+      return { enquiries: [...demo.enquiries, ...e], visits: [...demo.visits, ...v] };
+    }
+    function persist(type, list){
+      localStorage.setItem(type, JSON.stringify(list));
+    }
+
+    // Page navigation
+    function showPage(page){
+      document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+      document.getElementById('page-'+page).classList.remove('hidden');
+      // re-render KPIs/charts when showing dashboard
+      if(page==='dashboard') renderAll();
+      if(page==='enquiries') renderEnquiries();
+      if(page==='visits') renderVisits();
+    }
+
+    // Simple state for filters
+    let state = { from:'', to:'', region:'', cam:'', customer:'' };
+    function inRange(dateStr, from, to){ if(!from && !to) return true; const d=new Date(dateStr); if(from && d<new Date(from)) return false; if(to && d>new Date(to)) return false; return true; }
+    function applyFiltersTo(list){ return list.filter(r=> (!state.region || r.region===state.region) && (!state.cam || (r.cam||'').toLowerCase().includes(state.cam.toLowerCase())) && (!state.customer || (r.customer||'').toLowerCase().includes(state.customer.toLowerCase())) && inRange(r.date, state.from, state.to) ); }
+
+    // KPIs & Charts (same logic as before)
+    function renderKPIs(data){
+      const e = applyFiltersTo(data.enquiries);
+      const v = applyFiltersTo(data.visits);
+      const totalEnq = e.length;
+      const totalVisits = v.length;
+      const convertedQty = e.filter(x=>x.status==='Converted').reduce((a,b)=>a+(+b.qty||0),0);
+      const totalQty = e.reduce((a,b)=>a+(+b.qty||0),0);
+      const convRate = totalQty ? Math.round((convertedQty/totalQty)*100) : (totalEnq ? Math.round((e.filter(x=>x.status==='Converted').length/totalEnq)*100) : 0);
+      const byCAM = Object.entries(e.reduce((acc,cur)=>{acc[cur.cam]=(acc[cur.cam]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]);
+      document.getElementById('kpiEnquiries').textContent = totalEnq;
+      document.getElementById('kpiVisits').textContent = totalVisits;
+      document.getElementById('kpiConversion').textContent = convRate + '%';
+      document.getElementById('kpiTopCAM').textContent = byCAM[0]?.[0] || '–';
+      document.getElementById('kpiEnquiriesSub').textContent = state.region ? state.region : 'All regions';
+      document.getElementById('kpiVisitsSub').textContent = state.region ? state.region : 'All regions';
+    }
+
+    let charts = {};
+    function makeTrendChart(data){ charts.trend?.destroy(); const e=applyFiltersTo(data.enquiries); const v=applyFiltersTo(data.visits); const labelsSet=new Set([...e,...v].map(x=>x.date.slice(0,7)).sort()); const labels=Array.from(labelsSet); const eByM=labels.map(m=>e.filter(x=>x.date.startsWith(m)).length); const vByM=labels.map(m=>v.filter(x=>x.date.startsWith(m)).length); charts.trend = new Chart(document.getElementById('trendChart'), { type:'line', data:{labels, datasets:[{label:'Enquiries', data:eByM, tension:0.35},{label:'Visits', data:vByM, tension:0.35}]}, options:{responsive:true, plugins:{legend:{display:true}}, scales:{y:{beginAtZero:true}}} }); }
+    function makeLostChart(data){ charts.lost?.destroy(); const e=applyFiltersTo(data.enquiries).filter(x=>x.status==='Lost'); const groups=e.reduce((a,c)=>{const k=c.reason||'Other'; a[k]=(a[k]||0)+(+c.qty||1); return a;},{}); const labels=Object.keys(groups); const vals=labels.map(k=>groups[k]); charts.lost = new Chart(document.getElementById('lostChart'), { type:'doughnut', data:{labels, datasets:[{data:vals}]}, options:{plugins:{legend:{position:'bottom'}}} }); }
+    function makeRegionChart(data){ charts.region?.destroy(); const e=applyFiltersTo(data.enquiries); const v=applyFiltersTo(data.visits); const regions=Array.from(new Set([...e,...v].map(x=>x.region))).sort(); const eCounts=regions.map(r=>e.filter(x=>x.region===r).length); const vCounts=regions.map(r=>v.filter(x=>x.region===r).length); charts.region = new Chart(document.getElementById('regionChart'), { type:'bar', data:{ labels:regions, datasets:[{label:'Enquiries', data:eCounts},{label:'Visits', data:vCounts}]}, options:{responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}}} }); }
+    function makeCamChart(data){ charts.cam?.destroy(); const e=applyFiltersTo(data.enquiries); const cams=Object.entries(e.reduce((a,c)=>{a[c.cam]=(a[c.cam]||0)+1;return a;},{})).sort((a,b)=>b[1]-a[1]).slice(0,5); charts.cam = new Chart(document.getElementById('camChart'), { type:'bar', data:{ labels:cams.map(x=>x[0]), datasets:[{label:'Enquiries', data:cams.map(x=>x[1])}]}, options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}} }); }
+    function makeFunnelChart(data){ charts.funnel?.destroy(); const e=applyFiltersTo(data.enquiries); const totalE=e.length; const totalV=applyFiltersTo(data.visits).length; const conv=e.filter(x=>x.status==='Converted').length; const orders=Math.round(conv*0.6); const values=[totalE, totalV, conv, orders]; charts.funnel = new Chart(document.getElementById('funnelChart'), { type:'bar', data:{ labels:['Enquiries','Visits','Converted','Orders'], datasets:[{label:'Count', data:values}]}, options:{indexAxis:'y', scales:{x:{beginAtZero:true}}, plugins:{legend:{display:false}}} }); }
+
+    function renderAll(){ const data=loadData(); renderKPIs(data); makeTrendChart(data); makeLostChart(data); makeRegionChart(data); makeCamChart(data); makeFunnelChart(data); }
+
+    // Enquiries page render + editing
+    function renderEnquiries(){ const data=loadData(); const list=applyFiltersTo(data.enquiries); const tbody=document.getElementById('enquiriesBody'); tbody.innerHTML=''; list.forEach((r,i)=>{ const idx = i; const row=document.createElement('tr'); row.className='border-b border-gray-100'; row.innerHTML = `
+        <td>${r.date}</td>
+        <td>${r.customer}</td>
+        <td>${r.region}</td>
+        <td>${r.cam}</td>
+        <td>
+          <select data-idx="${idx}" class="input inline-block status-enq" style="min-width:140px;">
+            <option ${r.status==='In Process'?'selected':''}>In Process</option>
+            <option ${r.status==='Converted'?'selected':''}>Converted</option>
+            <option ${r.status==='Lost'?'selected':''}>Lost</option>
+            <option ${r.status==='Win'?'selected':''}>Win</option>
+          </select>
+        </td>
+        <td>${(r.qty||0).toFixed(2)}</td>
+        <td><input class="input lost-reason" data-idx="${idx}" value="${r.reason||''}" placeholder="Reason if Lost" style="min-width:150px;"/></td>
+        <td><button class="btn btn-primary edit-enq" data-idx="${idx}">Edit</button></td>
+      `; tbody.appendChild(row); });
+
+      // attach listeners for status change & lost reason
+      $$('.status-enq').forEach(el=>el.addEventListener('change', (ev)=>{ const idx = +ev.target.dataset.idx; updateEnquiryFromUI(idx); }));
+      $$('.lost-reason').forEach(el=>el.addEventListener('change', (ev)=>{ const idx = +ev.target.dataset.idx; updateEnquiryFromUI(idx); }));
+      $$('.edit-enq').forEach(btn=>btn.addEventListener('click', (ev)=>{ const idx=+ev.target.dataset.idx; openEnquiryModal(idx); }));
+    }
+
+    function updateEnquiryFromUI(idx){ const data=loadData(); const list=applyFiltersTo(data.enquiries); const item=list[idx]; if(!item) return; const statusEl = document.querySelectorAll('.status-enq')[idx]; const reasonEl = document.querySelectorAll('.lost-reason')[idx]; item.status = statusEl.value; item.reason = reasonEl.value; // persist: replace the corresponding item in localStorage-backed list
+      // We'll persist by mapping demo+local list; for simplicity push changes to local copy keyed by customer+date+cam
+      const local = JSON.parse(localStorage.getItem('enquiries')||'[]');
+      // find in local array first by index mapping; easier approach: push modified item to localStorage as update record
+      local.unshift(item);
+      localStorage.setItem('enquiries', JSON.stringify(local));
+      renderEnquiries(); renderAll();
+    }
+
+    function openEnquiryModal(idx){ const data=loadData(); const list=applyFiltersTo(data.enquiries); const item=list[idx]; if(!item) return; document.getElementById('enqModalTitle').textContent='Edit Enquiry'; document.getElementById('enqIndex').value = idx; document.getElementById('enqDate').value = item.date; document.getElementById('enqCustomer').value = item.customer; document.getElementById('enqRegion').value = item.region; document.getElementById('enqCAM').value = item.cam; document.getElementById('enqStatus').value = item.status; document.getElementById('enqQty').value = item.qty||''; document.getElementById('enqReason').value = item.reason||''; document.getElementById('enquiryModal').showModal(); }
+
+    // Visits page render + editing
+    function renderVisits(){ const data=loadData(); const list=applyFiltersTo(data.visits); const tbody=document.getElementById('visitsBody'); tbody.innerHTML=''; let scheduled=0, completed=0; list.forEach((r,i)=>{ if(r.status==='Scheduled') scheduled++; if(r.status==='Completed') completed++; const row=document.createElement('tr'); row.className='border-b border-gray-100'; row.innerHTML = `
+        <td>${r.date}</td>
+        <td>${r.customer}</td>
+        <td>${r.region}</td>
+        <td>${r.cam}</td>
+        <td>
+          <select data-idx="${i}" class="input inline-block status-visit" style="min-width:140px;">
+            <option ${r.status==='Scheduled'?'selected':''}>Scheduled</option>
+            <option ${r.status==='Completed'?'selected':''}>Completed</option>
+          </select>
+        </td>
+        <td><button class="btn edit-visit" data-idx="${i}">Edit</button></td>
+      `; tbody.appendChild(row); });
+      document.getElementById('visitsScheduled').textContent = scheduled; document.getElementById('visitsCompleted').textContent = completed;
+      $$('.status-visit').forEach(el=>el.addEventListener('change', (ev)=>{ const idx=+ev.target.dataset.idx; updateVisitFromUI(idx); }));
+      $$('.edit-visit').forEach(btn=>btn.addEventListener('click', (ev)=>{ const idx=+ev.target.dataset.idx; openVisitModal(idx); }));
+    }
+
+    function updateVisitFromUI(idx){ const data=loadData(); const list=applyFiltersTo(data.visits); const item=list[idx]; if(!item) return; const statusEl = document.querySelectorAll('.status-visit')[idx]; item.status = statusEl.value; const local = JSON.parse(localStorage.getItem('visits')||'[]'); local.unshift(item); localStorage.setItem('visits', JSON.stringify(local)); renderVisits(); renderAll(); }
+
+    function openVisitModal(idx){ const data=loadData(); const list=applyFiltersTo(data.visits); const item=list[idx]; if(!item) return; document.getElementById('visitModalTitle').textContent='Edit Visit'; document.getElementById('visitIndex').value = idx; document.getElementById('visitDate').value = item.date; document.getElementById('visitCustomer').value = item.customer; document.getElementById('visitRegion').value = item.region; document.getElementById('visitCAM').value = item.cam; document.getElementById('visitStatus').value = item.status; document.getElementById('visitModal').showModal(); }
+
+    // Add / Save handlers
+    document.getElementById('openAddEnquiry').addEventListener('click', ()=>{ document.getElementById('enqModalTitle').textContent='Add Enquiry'; document.getElementById('enqIndex').value=''; document.getElementById('enquiryModal').showModal(); });
+    document.getElementById('openAddVisit').addEventListener('click', ()=>{ document.getElementById('visitModalTitle').textContent='Add Visit'; document.getElementById('visitIndex').value=''; document.getElementById('visitModal').showModal(); });
+
+    function saveEnquiryFromModal(){ const idx = document.getElementById('enqIndex').value; const item = { date: document.getElementById('enqDate').value, customer: document.getElementById('enqCustomer').value, region: document.getElementById('enqRegion').value, cam: document.getElementById('enqCAM').value, status: document.getElementById('enqStatus').value, qty: parseFloat(document.getElementById('enqQty').value||'0'), reason: document.getElementById('enqReason').value }; if(!item.date||!item.customer||!item.region||!item.cam){ alert('Please fill required fields'); return; } const local = JSON.parse(localStorage.getItem('enquiries')||'[]'); local.unshift(item); localStorage.setItem('enquiries', JSON.stringify(local)); document.getElementById('enquiryModal').close(); renderEnquiries(); renderAll(); }
+    document.getElementById('saveEnquiry').addEventListener('click', saveEnquiryFromModal);
+
+    function saveVisitFromModal(){ const item = { date: document.getElementById('visitDate').value, customer: document.getElementById('visitCustomer').value, region: document.getElementById('visitRegion').value, cam: document.getElementById('visitCAM').value, status: document.getElementById('visitStatus').value }; if(!item.date||!item.customer||!item.region||!item.cam){ alert('Please fill required fields'); return; } const local = JSON.parse(localStorage.getItem('visits')||'[]'); local.unshift(item); localStorage.setItem('visits', JSON.stringify(local)); document.getElementById('visitModal').close(); renderVisits(); renderAll(); }
+    document.getElementById('saveVisit').addEventListener('click', saveVisitFromModal);
+
+    // Filters apply/clear
+    document.getElementById('applyFilters').addEventListener('click', ()=>{ state.region = document.getElementById('filterRegion').value; state.cam = document.getElementById('filterCAM').value.trim(); state.customer = document.getElementById('filterCustomer').value.trim(); state.from = document.getElementById('filterFrom').value; state.to = document.getElementById('filterTo').value; renderAll(); });
+    document.getElementById('clearFilters').addEventListener('click', ()=>{ state = { from:'', to:'', region:'', cam:'', customer:'' }; document.querySelectorAll('#page-dashboard select, #page-dashboard input').forEach(el=>{ if(el.type==='date'||el.tagName==='INPUT') el.value=''; else if(el.tagName==='SELECT') el.selectedIndex=0; }); renderAll(); });
+
+    // Export to xlsx using SheetJS
+    function exportToXLSX(rows, sheetName, fileName){ const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, fileName + '.xlsx'); }
+
+    document.getElementById('exportEnquiriesXlsx').addEventListener('click', ()=>{
+      const data = applyFiltersTo(loadData().enquiries).map(r=>({ Date:r.date, Customer:r.customer, Region:r.region, CAM:r.cam, Status:r.status, Qty:r.qty, LostReason:r.reason }));
+      exportToXLSX(data, 'Enquiries', 'Enquiries_export');
     });
 
-    document.getElementById('visitForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('Visit submitted!');
+    document.getElementById('exportVisitsXlsx').addEventListener('click', ()=>{
+      const data = applyFiltersTo(loadData().visits).map(r=>({ Date:r.date, Customer:r.customer, Region:r.region, CAM:r.cam, Status:r.status }));
+      exportToXLSX(data, 'Visits', 'Visits_export');
     });
+
+    // Initial view
+    showPage('dashboard'); renderAll();
   </script>
 </body>
 </html>
