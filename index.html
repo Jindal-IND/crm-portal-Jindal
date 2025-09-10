@@ -1,479 +1,831 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRM JSSL – Dashboard</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- SheetJS for .xlsx export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100; }
-    .kpi { @apply flex flex-col gap-1 p-5 card; }
-    .nav-item { @apply text-gray-600 hover:text-gray-900 transition; }
-    .chip { @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700; }
-    .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium shadow-sm border border-gray-200 hover:bg-gray-50; }
-    .btn-primary { @apply bg-gray-900 text-white border-gray-900 hover:bg-black; }
-    .input { @apply w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20; }
-    .select { @apply input bg-white; }
-    .section-title { @apply text-sm font-semibold text-gray-700; }
-    .table { @apply min-w-full text-sm; }
-    .table th { @apply text-left font-semibold text-gray-600 py-3; }
-    .table td { @apply py-3 text-gray-700; }
-    .divider { @apply h-px bg-gray-100 my-4; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM JSSL</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Inter Font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 4px;
+        }
+        .modal {
+            display: none;
+        }
+        .modal-active {
+            display: block;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
-  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="h-10 w-10 rounded-xl bg-gray-900 text-white flex items-center justify-center font-bold">J</div>
-        <div>
-          <h1 class="text-lg font-semibold">CRM JSSL</h1>
-          <p class="text-xs text-gray-500">Sales Analytics & Enquiry Management</p>
-        </div>
-      </div>
-      <nav class="hidden md:flex items-center gap-6">
-        <a class="nav-item" href="#dashboard" onclick="showPage('dashboard')">Dashboard</a>
-        <a class="nav-item" href="#enquiries" onclick="showPage('enquiries')">Enquiries</a>
-        <a class="nav-item" href="#visits" onclick="showPage('visits')">Visits</a>
-        <a class="nav-item" href="#reports" onclick="showPage('reports')">Reports</a>
-        <a class="nav-item" href="#settings" onclick="showPage('settings')">Settings</a>
-      </nav>
-      <div class="flex items-center gap-2">
-        <button id="addEnquiryBtn" class="btn btn-primary"><i data-lucide="plus"></i> Add Enquiry</button>
-        <button id="addVisitBtn" class="btn"><i data-lucide="calendar-plus"></i> Add Visit</button>
-        <div class="hidden sm:flex items-center gap-3 pl-3 ml-3 border-l border-gray-200">
-          <span class="chip">Logged in: <strong class="ml-1">Tanisha</strong></span>
-        </div>
-      </div>
-    </div>
-  </header>
+<body class="flex flex-col min-h-screen">
+    <!-- Main Content Wrapper -->
+    <div class="flex flex-col flex-1">
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <!-- Pages container -->
-    <div id="page-dashboard" class="page">
-      <!-- Filters & KPIs -->
-      <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-3 card p-4">
-          <div class="flex items-center justify-between">
-            <h2 class="font-semibold">Filters</h2>
-            <button id="clearFilters" class="text-xs text-gray-500 hover:text-gray-800">Reset</button>
-          </div>
-          <div class="divider"></div>
-          <div class="space-y-3">
-            <div>
-              <label class="section-title">Region</label>
-              <select id="filterRegion" class="select mt-1">
-                <option value="">All Regions</option>
-                <option>North</option>
-                <option>South</option>
-                <option>Mumbai</option>
-                <option>Kolkata</option>
-                <option>Vadodara</option>
-              </select>
+        <!-- Header -->
+        <header class="bg-white p-4 shadow-md flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="text-xl font-bold text-gray-800">
+                    <span class="text-blue-500">CRM</span> JSSL
+                </div>
+                <div class="text-gray-500 text-sm">Sales Analytics & Enquiry Management</div>
             </div>
-            <div>
-              <label class="section-title">CAM</label>
-              <input id="filterCAM" class="input mt-1" placeholder="e.g., Rahul Sharma"/>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-500">Today</span>
+                <div class="flex space-x-1 p-1 bg-gray-200 rounded-full">
+                    <button id="dashboardBtn" class="px-4 py-1 rounded-full bg-white text-gray-800 font-semibold">Dashboard</button>
+                    <button id="enquiriesBtn" class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Enquiries</button>
+                    <button class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Visits</button>
+                    <button class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Reports</button>
+                </div>
             </div>
-            <div>
-              <label class="section-title">Date Range</label>
-              <div class="grid grid-cols-2 gap-2 mt-1">
-                <input id="filterFrom" type="date" class="input"/>
-                <input id="filterTo" type="date" class="input"/>
-              </div>
+        </header>
+
+        <!-- Main Body Content -->
+        <div class="flex-1 flex p-6 space-x-6">
+            <!-- Filter Sidebar -->
+            <aside class="w-64 bg-white p-6 rounded-lg shadow-lg flex flex-col">
+                <h2 class="font-bold text-lg mb-4 text-gray-800">Filter</h2>
+                
+                <!-- Date Range Filter -->
+                <div class="space-y-4 mb-6">
+                    <label class="flex items-center space-x-2 text-gray-700 cursor-pointer">
+                        <input type="checkbox" id="date-checkbox" class="h-4 w-4 rounded text-blue-500 focus:ring-blue-500">
+                        <span class="text-lg font-medium">Date Range</span>
+                    </label>
+                    <div id="date-filter-options" class="mt-2 hidden space-y-2">
+                        <div>
+                            <label for="start-date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input type="date" id="start-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        </div>
+                        <div>
+                            <label for="end-date" class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input type="date" id="end-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        </div>
+                    </div>
+                    <p id="date-display" class="mt-2 text-sm text-gray-500 font-semibold"></p>
+                </div>
+
+                <!-- Region Filter -->
+                <div class="space-y-4 mb-6">
+                    <div class="font-semibold text-gray-800">Region</div>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2 text-gray-700 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                            <span>Gurgaon</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-gray-700 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                            <span>Mumbai</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-gray-700 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                            <span>South</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-gray-700 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                            <span>Vadodara</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-gray-700 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                            <span>Kolkata</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- CAM Dropdown Filter -->
+                <div class="space-y-4 mb-6">
+                    <div class="font-semibold text-gray-800">CAM</div>
+                    <select id="cam-filter" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select CAM</option>
+                        <option value="Yogesh Sharma">Yogesh Sharma</option>
+                        <option value="Tukaram Gatawad">Tukaram Gatawad</option>
+                        <option value="Dwengyayu Tyawi">Dwengyayu Tyawi</option>
+                        <option value="Mankeno">Mankeno</option>
+                        <option value="Ankit Kumar Jha">Ankit Kumar Jha</option>
+                        <option value="Anuj Jain">Anuj Jain</option>
+                        <option value="Medhak Bhat">Medhak Bhat</option>
+                        <option value="Sanjay Singh">Sanjay Singh</option>
+                        <option value="Prince Jha">Prince Jha</option>
+                        <option value="Rasalgethi Sharma">Rasalgethi Sharma</option>
+                        <option value="John Doe">John Doe</option>
+                        <option value="Jane Smith">Jane Smith</option>
+                    </select>
+                </div>
+
+                <!-- Customer Dropdown Filter -->
+                <div class="space-y-4 mb-6">
+                    <div class="font-semibold text-gray-800">Customer</div>
+                    <select id="customer-filter" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select Customer</option>
+                        <option value="VIKAS STEEL">VIKAS STEEL</option>
+                        <option value="SAI SALES">SAI SALES</option>
+                        <option value="AVIRAJ STEEL">AVIRAJ STEEL</option>
+                        <option value="SSNS">SSNS</option>
+                        <option value="OYUUH">OYUUH</option>
+                        <option value="Bold text column">Bold text column</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-2 mt-auto">
+                    <button class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Apply</button>
+                    <button class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">Clear</button>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 bg-white p-6 rounded-lg shadow-lg flex flex-col">
+                <!-- Dashboard Content -->
+                <div id="dashboardContent" class="space-y-6">
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Total Enquiries -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">TOTAL ENQUIRIES</h3>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">10.5K</p>
+                        </div>
+                        <!-- Total Visits -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">TOTAL VISITS</h3>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">7,265</p>
+                        </div>
+                        <!-- Conversion Visit vs Enquiry -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">CONVERSION VISIT VS ENQUIRY</h3>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">45%</p>
+                        </div>
+                        <!-- Top CAM by Enquiry -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">TOP CAM BY ENQUIRY</h3>
+                            <p class="text-lg font-bold text-blue-600 mt-2">Yogesh Sharma: 230 MT</p>
+                        </div>
+                        <!-- New Customer Visited -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">NEW CUSTOMER VISITED</h3>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">156</p>
+                        </div>
+                        <!-- New Customer Enquiry -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">NEW CUSTOMER ENQUIRY</h3>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">Count: 2,567</p>
+                            <p class="text-lg font-bold text-blue-600 mt-2">MT: 256</p>
+                        </div>
+                        <!-- Enquiry Converted -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">ENQUIRY CONVERTED</h3>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">7,265</p>
+                        </div>
+                        <!-- Enquiry in Process -->
+                        <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
+                            <h3 class="text-gray-500 text-sm font-medium">ENQUIRY IN PROCESS</h3>
+                            <p class="text-3xl font-bold text-blue-600 mt-2">2,318</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Enquiries & Visit Trend Chart -->
+                        <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2 lg:col-span-2" style="height: 350px;">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Enquiries & Visit Trend</h2>
+                            <canvas id="enquiriesVisitTrendChart"></canvas>
+                        </div>
+
+                        <!-- CAM Wise Conversion % -->
+                        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Cam Wise Conversion %</h2>
+                            <div class="flex-1 overflow-y-auto scroll-container max-h-80">
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span>Yogesh Sharma</span>
+                                        <span class="font-bold text-gray-800">22%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Tukaram Gatawad</span>
+                                        <span class="font-bold text-gray-800">22%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Dwengyayu Tyawi</span>
+                                        <span class="font-bold text-gray-800">22%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Mankeno</span>
+                                        <span class="font-bold text-gray-800">22%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Ankit Kumar Jha</span>
+                                        <span class="font-bold text-gray-800">22%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Anuj Jain</span>
+                                        <span class="font-bold text-gray-800">22%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Medhak Bhat</span>
+                                        <span class="font-bold text-gray-800">18%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Sanjay Singh</span>
+                                        <span class="font-bold text-gray-800">15%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Prince Jha</span>
+                                        <span class="font-bold text-gray-800">12%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>Rasalgethi Sharma</span>
+                                        <span class="font-bold text-gray-800">10%</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span>John Doe</span>
+                                        <span class="font-bold text-gray-800">9%</span>
+                                    </div>
+                                     <div class="flex items-center justify-between">
+                                        <span>Jane Smith</span>
+                                        <span class="font-bold text-gray-800">8%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- Region Wise Enquiry Loss with Reasons -->
+                        <div class="bg-white p-6 rounded-lg shadow-lg" style="height: 350px;">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Region Wise Enquiry Loss with Reasons</h2>
+                            <canvas id="enquiryLossChart"></canvas>
+                        </div>
+                        
+                        <!-- Lost Reason Breakdown -->
+                        <div class="bg-white p-6 rounded-lg shadow-lg" style="height: 350px;">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Lost Reason Breakdown</h2>
+                            <canvas id="lostReasonChart"></canvas>
+                        </div>
+                        
+                        <!-- Region-wise Performance -->
+                        <div class="bg-white p-6 rounded-lg shadow-lg" style="height: 350px;">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Region-wise Performance</h2>
+                            <canvas id="regionPerformanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section that needs to be wider -->
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- CAM-wise Performance -->
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">CAM-wise Performance</h2>
+                            <div class="overflow-y-auto" style="height: 450px;">
+                                <canvas id="camPerformanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Conversion Funnel -->
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Conversion Funnel</h2>
+                            <div class="overflow-y-auto" style="height: 450px;">
+                                <canvas id="conversionFunnelChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Content (Initially hidden) -->
+                <div id="enquiriesTableContent" class="flex-1 hidden flex-col">
+                    <!-- Table Header Actions -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="text-lg font-semibold text-gray-800">Enquiries</div>
+                            <div class="flex items-center space-x-2 text-gray-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6zm-2 0l-8 5-8-5h16z"/>
+                                </svg>
+                                <span>Filters</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <button class="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V8h2v4zm4 4h-2v-2h2v2zm0-4h-2V8h2v4z"/>
+                                </svg>
+                                <span>Export</span>
+                            </button>
+                            <button id="addEnquiryBtn" class="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                </svg>
+                                <span>Add new ENQ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="flex-1 overflow-x-auto scroll-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        CUSTOMER NAME
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block ml-1" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2l-5 5h10l-5-5zM12 22l5-5H7l5 5z"/>
+                                        </svg>
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        CUSTOMER CODE
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        CAM NAME
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        REGION
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        DATE
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        ENQUIRY STATUS
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        GRADE
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        WIDTH
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        FINISH
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        THICKNESS
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        ACTION
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- Dummy Data Row 1 -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">VIKAS STEEL</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">MEDHAK BHAT</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">NORTH</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">CONVERTED</span></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">304</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1250</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">N4</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Vikas Steel">Change Status</button>
+                                    </td>
+                                </tr>
+                                <!-- Dummy Data Row 2 -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">SAI SALES</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">YOGESH SHARMA</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">NORTH</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">LOST</span></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">430</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2500</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">MIRROR</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Sai Sales">Change Status</button>
+                                    </td>
+                                </tr>
+                                <!-- More dummy rows to fill the table -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">AVIRAJ STEEL</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">SANJAY SINGH</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">SOUTH</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">INPROCESS</span></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">JT</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1250</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2B</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Aviraj Steel">Change Status</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">SSNS</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">DEFEEYAYU TYAWI</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">SOUTH</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">CONVERTED</span></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">304L</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1250</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2B</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="SSNS">Change Status</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">OYUUH</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">PRINCE JHA</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">NORTH</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">INPROCESS</span></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">JT</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">3402</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2B</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="OYUUH">Change Status</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">Bold text column</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">AJAY SHOKHAWAT</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">MUMBAI</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">CONVERTED</span></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">204CU</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2500</td>
+                                    <td class="px-6 py-4 whitespace-now-rap text-gray-500">SB</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Bold text column">Change Status</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Enquiry Modal -->
+    <div id="addEnquiryModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+            <div class="flex justify-between items-center pb-3">
+                <h3 class="text-lg font-bold">Add Enquiry</h3>
+                <button id="closeEnquiryModal" class="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
-            <div>
-              <label class="section-title">Customer</label>
-              <input id="filterCustomer" class="input mt-1" placeholder="Search customer"/>
+            <div class="mt-2">
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700">Customer Name:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">CAM NAME:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Grade:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">QTY:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Thickness:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Finish:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Width:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Length:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Save</button>
+                </form>
             </div>
-            <button id="applyFilters" class="btn w-full mt-2"><i data-lucide="sliders"></i> Apply Filters</button>
-          </div>
         </div>
-
-        <div class="lg:col-span-9 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div class="kpi"><span class="text-xs text-gray-500">Total Enquiries</span><span id="kpiEnquiries" class="text-2xl font-semibold">0</span><span id="kpiEnquiriesSub" class="text-xs text-gray-500">All regions</span></div>
-          <div class="kpi"><span class="text-xs text-gray-500">Total Visits</span><span id="kpiVisits" class="text-2xl font-semibold">0</span><span id="kpiVisitsSub" class="text-xs text-gray-500">All regions</span></div>
-          <div class="kpi"><span class="text-xs text-gray-500">Conversion Rate</span><span id="kpiConversion" class="text-2xl font-semibold">0%</span><span class="text-xs text-gray-500">Enquiries → Converted</span></div>
-          <div class="kpi"><span class="text-xs text-gray-500">Top CAM (This Month)</span><span id="kpiTopCAM" class="text-2xl font-semibold">–</span><span id="kpiTopCAMSub" class="text-xs text-gray-500">by enquiries</span></div>
+    </div>
+    
+    <!-- Change Status Modal -->
+    <div id="changeStatusModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+            <div class="flex justify-between items-center pb-3">
+                <h3 class="text-lg font-bold">You are changing the status of enquiry for <span id="customerNameSpan"></span></h3>
+                <button id="closeStatusModal" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <div class="mt-2">
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700">To proceed, please fill the following details:</label>
+                        <select class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>Convert</option>
+                            <option>Inprocess</option>
+                            <option>Lost</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Lost Quantity:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                     <div>
+                        <label class="block text-gray-700">Reason For Lost Qty:</label>
+                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Remarks (Optional):</label>
+                        <textarea class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Save</button>
+                </form>
+            </div>
         </div>
-      </section>
-
-      <!-- Charts -->
-      <section class="mt-6 grid grid-cols-1 xl:grid-cols-12 gap-4">
-        <div class="xl:col-span-7 card p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold">Enquiries & Visits Trend</h3>
-            <span class="chip" id="trendChip">Monthly</span>
-          </div>
-          <canvas id="trendChart" height="120"></canvas>
-        </div>
-        <div class="xl:col-span-5 card p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold">Lost Reasons Breakdown</h3>
-            <span class="chip">% of Lost Qty</span>
-          </div>
-          <canvas id="lostChart" height="120"></canvas>
-        </div>
-
-        <div class="xl:col-span-6 card p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold">Region-wise Performance</h3>
-            <span class="chip">Enquiries vs Visits</span>
-          </div>
-          <canvas id="regionChart" height="120"></canvas>
-        </div>
-        <div class="xl:col-span-6 card p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold">CAM-wise Performance</h3>
-            <span class="chip">Top 5 CAMs</span>
-          </div>
-          <canvas id="camChart" height="120"></canvas>
-        </div>
-
-        <div class="xl:col-span-12 card p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold">Conversion Funnel</h3>
-            <span class="chip">Enquiries → Visits → Converted → Orders</span>
-          </div>
-          <canvas id="funnelChart" height="120"></canvas>
-        </div>
-      </section>
     </div>
 
-    <!-- Enquiries Page -->
-    <div id="page-enquiries" class="page hidden">
-      <div class="card p-4 mb-4 flex items-center justify-between">
-        <h3 class="font-semibold">Enquiries</h3>
-        <div class="flex items-center gap-2">
-          <button class="btn" id="exportEnquiriesXlsx"><i data-lucide="download"></i> Export Enquiries (.xlsx)</button>
-          <button class="btn btn-primary" id="openAddEnquiry"><i data-lucide="plus"></i> New Enquiry</button>
-        </div>
-      </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get content sections
+            const dashboardContent = document.getElementById('dashboardContent');
+            const enquiriesTableContent = document.getElementById('enquiriesTableContent');
 
-      <div class="card p-4 overflow-x-auto">
-        <table class="table" id="enquiriesTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Region</th>
-              <th>CAM</th>
-              <th>Status</th>
-              <th>Qty (Tons)</th>
-              <th>Lost Reason</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="enquiriesBody"></tbody>
-        </table>
-      </div>
-    </div>
+            // Get navigation buttons
+            const dashboardBtn = document.getElementById('dashboardBtn');
+            const enquiriesBtn = document.getElementById('enquiriesBtn');
+            
+            // Initial state: show dashboard
+            dashboardContent.classList.remove('hidden');
+            enquiriesTableContent.classList.add('hidden');
+            
+            // Toggle visibility on button click
+            dashboardBtn.addEventListener('click', () => {
+                dashboardContent.classList.remove('hidden');
+                enquiriesTableContent.classList.add('hidden');
+                dashboardBtn.classList.add('bg-white', 'text-gray-800');
+                enquiriesBtn.classList.remove('bg-white', 'text-gray-800');
+                enquiriesBtn.classList.add('text-gray-500');
+            });
+            
+            enquiriesBtn.addEventListener('click', () => {
+                enquiriesTableContent.classList.remove('hidden');
+                dashboardContent.classList.add('hidden');
+                enquiriesBtn.classList.add('bg-white', 'text-gray-800');
+                dashboardBtn.classList.remove('bg-white', 'text-gray-800');
+                dashboardBtn.classList.add('text-gray-500');
+            });
 
-    <!-- Visits Page -->
-    <div id="page-visits" class="page hidden">
-      <div class="card p-4 mb-4 flex items-center justify-between">
-        <div>
-          <h3 class="font-semibold">Visits</h3>
-          <div class="text-sm text-gray-600 mt-1">Scheduled: <span id="visitsScheduled">0</span> • Completed: <span id="visitsCompleted">0</span></div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button class="btn" id="exportVisitsXlsx"><i data-lucide="download"></i> Export Visits (.xlsx)</button>
-          <button class="btn" id="openAddVisit"><i data-lucide="calendar-plus"></i> New Visit</button>
-        </div>
-      </div>
+            // Modals for Add Enquiry and Change Status
+            const addEnquiryBtn = document.getElementById('addEnquiryBtn');
+            const addEnquiryModal = document.getElementById('addEnquiryModal');
+            const closeEnquiryModal = document.getElementById('closeEnquiryModal');
+            
+            addEnquiryBtn.addEventListener('click', () => {
+                addEnquiryModal.classList.add('modal-active');
+            });
+            
+            closeEnquiryModal.addEventListener('click', () => {
+                addEnquiryModal.classList.remove('modal-active');
+            });
 
-      <div class="card p-4 overflow-x-auto">
-        <table class="table" id="visitsTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Region</th>
-              <th>CAM</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="visitsBody"></tbody>
-        </table>
-      </div>
-    </div>
+            const changeStatusBtns = document.querySelectorAll('.change-status-btn');
+            const changeStatusModal = document.getElementById('changeStatusModal');
+            const closeStatusModal = document.getElementById('closeStatusModal');
+            const customerNameSpan = document.getElementById('customerNameSpan');
 
-    <!-- Reports & Settings (placeholders) -->
-    <div id="page-reports" class="page hidden card p-4">
-      <h3 class="font-semibold">Reports</h3>
-      <p class="text-sm text-gray-600 mt-2">Download monthly/quarterly performance, lost reason analysis, and CAM/Region summaries. (Prototype placeholder)</p>
-    </div>
+            changeStatusBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const customerName = btn.getAttribute('data-customer');
+                    customerNameSpan.textContent = customerName;
+                    changeStatusModal.classList.add('modal-active');
+                });
+            });
 
-    <div id="page-settings" class="page hidden card p-4">
-      <h3 class="font-semibold">Settings</h3>
-      <p class="text-sm text-gray-600 mt-2">Manage Region–CAM–CRM mapping and user roles. (Prototype placeholder)</p>
-    </div>
-  </main>
+            closeStatusModal.addEventListener('click', () => {
+                changeStatusModal.classList.remove('modal-active');
+            });
 
-  <!-- Enquiry Modal (for add/edit) -->
-  <dialog id="enquiryModal" class="rounded-2xl p-0 w-11/12 max-w-2xl">
-    <form method="dialog" class="card p-5">
-      <div class="flex items-center justify-between">
-        <h3 class="font-semibold" id="enqModalTitle">Add Enquiry</h3>
-        <button class="btn" type="button" onclick="document.getElementById('enquiryModal').close()"><i data-lucide='x'></i> Close</button>
-      </div>
-      <div class="divider"></div>
-      <input type="hidden" id="enqIndex" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="section-title">Date</label>
-          <input id="enqDate" type="date" class="input mt-1" required />
-        </div>
-        <div>
-          <label class="section-title">Customer Name</label>
-          <input id="enqCustomer" class="input mt-1" placeholder="Customer" required />
-        </div>
-        <div>
-          <label class="section-title">Region</label>
-          <input id="enqRegion" class="input mt-1" placeholder="Region" required />
-        </div>
-        <div>
-          <label class="section-title">CAM</label>
-          <input id="enqCAM" class="input mt-1" placeholder="CAM" required />
-        </div>
-        <div>
-          <label class="section-title">Status</label>
-          <select id="enqStatus" class="select mt-1">
-            <option>In Process</option>
-            <option>Converted</option>
-            <option>Lost</option>
-            <option>Win</option>
-          </select>
-        </div>
-        <div>
-          <label class="section-title">Qty (Tons)</label>
-          <input id="enqQty" type="number" step="0.01" class="input mt-1" placeholder="e.g., 12" />
-        </div>
-        <div class="sm:col-span-2">
-          <label class="section-title">Lost Reason (if Lost)</label>
-          <input id="enqReason" class="input mt-1" placeholder="Price / Competition / Delay / Others" />
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="flex items-center justify-end gap-2">
-        <button class="btn" type="button" onclick="document.getElementById('enquiryModal').close()">Cancel</button>
-        <button id="saveEnquiry" class="btn btn-primary" type="button">Save Enquiry</button>
-      </div>
-    </form>
-  </dialog>
+            // Date range filter logic
+            const dateCheckbox = document.getElementById('date-checkbox');
+            const dateFilterOptions = document.getElementById('date-filter-options');
+            const startDateInput = document.getElementById('start-date');
+            const endDateInput = document.getElementById('end-date');
+            const dateDisplay = document.getElementById('date-display');
 
-  <!-- Visit Modal -->
-  <dialog id="visitModal" class="rounded-2xl p-0 w-11/12 max-w-2xl">
-    <form method="dialog" class="card p-5">
-      <div class="flex items-center justify-between">
-        <h3 class="font-semibold" id="visitModalTitle">Add Visit</h3>
-        <button class="btn" type="button" onclick="document.getElementById('visitModal').close()"><i data-lucide='x'></i> Close</button>
-      </div>
-      <div class="divider"></div>
-      <input type="hidden" id="visitIndex" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="section-title">Date</label>
-          <input id="visitDate" type="date" class="input mt-1" required />
-        </div>
-        <div>
-          <label class="section-title">Customer Name</label>
-          <input id="visitCustomer" class="input mt-1" placeholder="Customer" required />
-        </div>
-        <div>
-          <label class="section-title">Region</label>
-          <input id="visitRegion" class="input mt-1" placeholder="Region" required />
-        </div>
-        <div>
-          <label class="section-title">CAM</label>
-          <input id="visitCAM" class="input mt-1" placeholder="CAM" required />
-        </div>
-        <div>
-          <label class="section-title">Status</label>
-          <select id="visitStatus" class="select mt-1">
-            <option>Scheduled</option>
-            <option>Completed</option>
-          </select>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="flex items-center justify-end gap-2">
-        <button class="btn" type="button" onclick="document.getElementById('visitModal').close()">Cancel</button>
-        <button id="saveVisit" class="btn btn-primary" type="button">Save Visit</button>
-      </div>
-    </form>
-  </dialog>
+            dateCheckbox.addEventListener('change', () => {
+                dateFilterOptions.classList.toggle('hidden', !dateCheckbox.checked);
+                dateDisplay.textContent = '';
+                startDateInput.value = '';
+                endDateInput.value = '';
+            });
 
-  <script>
-    lucide.createIcons();
+            const updateDateDisplay = () => {
+                const start = startDateInput.value;
+                const end = endDateInput.value;
+                if (start && end) {
+                    dateDisplay.textContent = `Selected: ${start} to ${end}`;
+                } else if (start) {
+                    dateDisplay.textContent = `Selected: From ${start}`;
+                } else if (end) {
+                    dateDisplay.textContent = `Selected: To ${end}`;
+                } else {
+                    dateDisplay.textContent = '';
+                }
+            };
 
-    // Demo data (same structure as before)
-    const demo = {
-      enquiries: [
-        { date: '2025-08-01', customer: 'Metro Steels', region: 'North', cam: 'Yogesh Sharma', status: 'Converted', qty: 12, reason: '' },
-        { date: '2025-08-02', customer: 'Shree Metals', region: 'South', cam: 'Sanjay Singh', status: 'In Process', qty: 18, reason: '' },
-        { date: '2025-08-03', customer: 'Omega Industries', region: 'Mumbai', cam: 'deerghayu tiwari', status: 'Lost', qty: 10, reason: 'Price' },
-        { date: '2025-08-05', customer: 'Eastern Alloys', region: 'Kolkata', cam: 'Priya Nair', status: 'Converted', qty: 16, reason: '' },
-        { date: '2025-08-09', customer: 'Bright Metals', region: 'Vadodara', cam: 'Rahul Sharma', status: 'Lost', qty: 8, reason: 'Competition' },
-        { date: '2025-08-12', customer: 'Prime Steel Co', region: 'North', cam: 'Rahul Sharma', status: 'In Process', qty: 21, reason: '' },
-      ],
-      visits: [
-        { date: '2025-08-01', customer: 'Metro Steels', region: 'North', cam: 'Yogesh Sharma', status: 'Completed' },
-        { date: '2025-08-03', customer: 'Omega Industries', region: 'Mumbai', cam: 'Sanjay Singh', status: 'Completed' },
-        { date: '2025-08-07', customer: 'Shree Metals', region: 'South', cam: 'Deerghayu Tiwari', status: 'Scheduled' },
-        { date: '2025-08-10', customer: 'Eastern Alloys', region: 'Kolkata', cam: 'Priya Nair', status: 'Completed' },
-        { date: '2025-08-15', customer: 'Prime Steel Co', region: 'North', cam: 'Rahul Sharma', status: 'Completed' },
-      ],
-    };
+            startDateInput.addEventListener('change', updateDateDisplay);
+            endDateInput.addEventListener('change', updateDateDisplay);
 
-    // Storage helpers
-    function loadData(){
-      const e = JSON.parse(localStorage.getItem('enquiries')||'[]');
-      const v = JSON.parse(localStorage.getItem('visits')||'[]');
-      return { enquiries: [...demo.enquiries, ...e], visits: [...demo.visits, ...v] };
-    }
-    function persist(type, list){
-      localStorage.setItem(type, JSON.stringify(list));
-    }
 
-    // Page navigation
-    function showPage(page){
-      document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
-      document.getElementById('page-'+page).classList.remove('hidden');
-      // re-render KPIs/charts when showing dashboard
-      if(page==='dashboard') renderAll();
-      if(page==='enquiries') renderEnquiries();
-      if(page==='visits') renderVisits();
-    }
+            // --- Chart.js Initializations ---
 
-    // Simple state for filters
-    let state = { from:'', to:'', region:'', cam:'', customer:'' };
-    function inRange(dateStr, from, to){ if(!from && !to) return true; const d=new Date(dateStr); if(from && d<new Date(from)) return false; if(to && d>new Date(to)) return false; return true; }
-    function applyFiltersTo(list){ return list.filter(r=> (!state.region || r.region===state.region) && (!state.cam || (r.cam||'').toLowerCase().includes(state.cam.toLowerCase())) && (!state.customer || (r.customer||'').toLowerCase().includes(state.customer.toLowerCase())) && inRange(r.date, state.from, state.to) ); }
+            // Chart 1: Enquiries & Visit Trend (Line Chart)
+            new Chart(document.getElementById('enquiriesVisitTrendChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Enquiries',
+                        data: [1.2, 1.5, 1.8, 1.6, 1.9, 1.7, 2.0],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        fill: false,
+                        tension: 0.4
+                    }, {
+                        label: 'Visits',
+                        data: [1.1, 1.4, 1.6, 1.5, 1.7, 1.8, 2.1],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                        fill: false,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
+            });
 
-    // KPIs & Charts (same logic as before)
-    function renderKPIs(data){
-      const e = applyFiltersTo(data.enquiries);
-      const v = applyFiltersTo(data.visits);
-      const totalEnq = e.length;
-      const totalVisits = v.length;
-      const convertedQty = e.filter(x=>x.status==='Converted').reduce((a,b)=>a+(+b.qty||0),0);
-      const totalQty = e.reduce((a,b)=>a+(+b.qty||0),0);
-      const convRate = totalQty ? Math.round((convertedQty/totalQty)*100) : (totalEnq ? Math.round((e.filter(x=>x.status==='Converted').length/totalEnq)*100) : 0);
-      const byCAM = Object.entries(e.reduce((acc,cur)=>{acc[cur.cam]=(acc[cur.cam]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]);
-      document.getElementById('kpiEnquiries').textContent = totalEnq;
-      document.getElementById('kpiVisits').textContent = totalVisits;
-      document.getElementById('kpiConversion').textContent = convRate + '%';
-      document.getElementById('kpiTopCAM').textContent = byCAM[0]?.[0] || '–';
-      document.getElementById('kpiEnquiriesSub').textContent = state.region ? state.region : 'All regions';
-      document.getElementById('kpiVisitsSub').textContent = state.region ? state.region : 'All regions';
-    }
+            // Chart 2: Region Wise Enquiry Loss with Reasons (Grouped Bar Chart)
+            new Chart(document.getElementById('enquiryLossChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Mumbai', 'North', 'South', 'Vadodara'],
+                    datasets: [{
+                        label: 'Price',
+                        data: [1.8, 2.2, 1.5, 1.0],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }, {
+                        label: 'Profit',
+                        data: [1.5, 1.8, 1.2, 0.8],
+                        backgroundColor: '#6b7280',
+                        borderRadius: 5
+                    }, {
+                        label: 'Not Interest',
+                        data: [1.0, 1.3, 1.0, 0.5],
+                        backgroundColor: '#ef4444',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true }
+                    }
+                }
+            });
 
-    let charts = {};
-    function makeTrendChart(data){ charts.trend?.destroy(); const e=applyFiltersTo(data.enquiries); const v=applyFiltersTo(data.visits); const labelsSet=new Set([...e,...v].map(x=>x.date.slice(0,7)).sort()); const labels=Array.from(labelsSet); const eByM=labels.map(m=>e.filter(x=>x.date.startsWith(m)).length); const vByM=labels.map(m=>v.filter(x=>x.date.startsWith(m)).length); charts.trend = new Chart(document.getElementById('trendChart'), { type:'line', data:{labels, datasets:[{label:'Enquiries', data:eByM, tension:0.35},{label:'Visits', data:vByM, tension:0.35}]}, options:{responsive:true, plugins:{legend:{display:true}}, scales:{y:{beginAtZero:true}}} }); }
-    function makeLostChart(data){ charts.lost?.destroy(); const e=applyFiltersTo(data.enquiries).filter(x=>x.status==='Lost'); const groups=e.reduce((a,c)=>{const k=c.reason||'Other'; a[k]=(a[k]||0)+(+c.qty||1); return a;},{}); const labels=Object.keys(groups); const vals=labels.map(k=>groups[k]); charts.lost = new Chart(document.getElementById('lostChart'), { type:'doughnut', data:{labels, datasets:[{data:vals}]}, options:{plugins:{legend:{position:'bottom'}}} }); }
-    function makeRegionChart(data){ charts.region?.destroy(); const e=applyFiltersTo(data.enquiries); const v=applyFiltersTo(data.visits); const regions=Array.from(new Set([...e,...v].map(x=>x.region))).sort(); const eCounts=regions.map(r=>e.filter(x=>x.region===r).length); const vCounts=regions.map(r=>v.filter(x=>x.region===r).length); charts.region = new Chart(document.getElementById('regionChart'), { type:'bar', data:{ labels:regions, datasets:[{label:'Enquiries', data:eCounts},{label:'Visits', data:vCounts}]}, options:{responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}}} }); }
-    function makeCamChart(data){ charts.cam?.destroy(); const e=applyFiltersTo(data.enquiries); const cams=Object.entries(e.reduce((a,c)=>{a[c.cam]=(a[c.cam]||0)+1;return a;},{})).sort((a,b)=>b[1]-a[1]).slice(0,5); charts.cam = new Chart(document.getElementById('camChart'), { type:'bar', data:{ labels:cams.map(x=>x[0]), datasets:[{label:'Enquiries', data:cams.map(x=>x[1])}]}, options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}} }); }
-    function makeFunnelChart(data){ charts.funnel?.destroy(); const e=applyFiltersTo(data.enquiries); const totalE=e.length; const totalV=applyFiltersTo(data.visits).length; const conv=e.filter(x=>x.status==='Converted').length; const orders=Math.round(conv*0.6); const values=[totalE, totalV, conv, orders]; charts.funnel = new Chart(document.getElementById('funnelChart'), { type:'bar', data:{ labels:['Enquiries','Visits','Converted','Orders'], datasets:[{label:'Count', data:values}]}, options:{indexAxis:'y', scales:{x:{beginAtZero:true}}, plugins:{legend:{display:false}}} }); }
+            // Chart 3: Lost Reason Breakdown (Doughnut Chart)
+            new Chart(document.getElementById('lostReasonChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Price', 'BM', 'Other'],
+                    datasets: [{
+                        data: [52.1, 27.2, 11.2],
+                        backgroundColor: ['#3b82f6', '#6b7280', '#ef4444'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '80%',
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
 
-    function renderAll(){ const data=loadData(); renderKPIs(data); makeTrendChart(data); makeLostChart(data); makeRegionChart(data); makeCamChart(data); makeFunnelChart(data); }
-
-    // Enquiries page render + editing
-    function renderEnquiries(){ const data=loadData(); const list=applyFiltersTo(data.enquiries); const tbody=document.getElementById('enquiriesBody'); tbody.innerHTML=''; list.forEach((r,i)=>{ const idx = i; const row=document.createElement('tr'); row.className='border-b border-gray-100'; row.innerHTML = `
-        <td>${r.date}</td>
-        <td>${r.customer}</td>
-        <td>${r.region}</td>
-        <td>${r.cam}</td>
-        <td>
-          <select data-idx="${idx}" class="input inline-block status-enq" style="min-width:140px;">
-            <option ${r.status==='In Process'?'selected':''}>In Process</option>
-            <option ${r.status==='Converted'?'selected':''}>Converted</option>
-            <option ${r.status==='Lost'?'selected':''}>Lost</option>
-            <option ${r.status==='Win'?'selected':''}>Win</option>
-          </select>
-        </td>
-        <td>${(r.qty||0).toFixed(2)}</td>
-        <td><input class="input lost-reason" data-idx="${idx}" value="${r.reason||''}" placeholder="Reason if Lost" style="min-width:150px;"/></td>
-        <td><button class="btn btn-primary edit-enq" data-idx="${idx}">Edit</button></td>
-      `; tbody.appendChild(row); });
-
-      // attach listeners for status change & lost reason
-      $$('.status-enq').forEach(el=>el.addEventListener('change', (ev)=>{ const idx = +ev.target.dataset.idx; updateEnquiryFromUI(idx); }));
-      $$('.lost-reason').forEach(el=>el.addEventListener('change', (ev)=>{ const idx = +ev.target.dataset.idx; updateEnquiryFromUI(idx); }));
-      $$('.edit-enq').forEach(btn=>btn.addEventListener('click', (ev)=>{ const idx=+ev.target.dataset.idx; openEnquiryModal(idx); }));
-    }
-
-    function updateEnquiryFromUI(idx){ const data=loadData(); const list=applyFiltersTo(data.enquiries); const item=list[idx]; if(!item) return; const statusEl = document.querySelectorAll('.status-enq')[idx]; const reasonEl = document.querySelectorAll('.lost-reason')[idx]; item.status = statusEl.value; item.reason = reasonEl.value; // persist: replace the corresponding item in localStorage-backed list
-      // We'll persist by mapping demo+local list; for simplicity push changes to local copy keyed by customer+date+cam
-      const local = JSON.parse(localStorage.getItem('enquiries')||'[]');
-      // find in local array first by index mapping; easier approach: push modified item to localStorage as update record
-      local.unshift(item);
-      localStorage.setItem('enquiries', JSON.stringify(local));
-      renderEnquiries(); renderAll();
-    }
-
-    function openEnquiryModal(idx){ const data=loadData(); const list=applyFiltersTo(data.enquiries); const item=list[idx]; if(!item) return; document.getElementById('enqModalTitle').textContent='Edit Enquiry'; document.getElementById('enqIndex').value = idx; document.getElementById('enqDate').value = item.date; document.getElementById('enqCustomer').value = item.customer; document.getElementById('enqRegion').value = item.region; document.getElementById('enqCAM').value = item.cam; document.getElementById('enqStatus').value = item.status; document.getElementById('enqQty').value = item.qty||''; document.getElementById('enqReason').value = item.reason||''; document.getElementById('enquiryModal').showModal(); }
-
-    // Visits page render + editing
-    function renderVisits(){ const data=loadData(); const list=applyFiltersTo(data.visits); const tbody=document.getElementById('visitsBody'); tbody.innerHTML=''; let scheduled=0, completed=0; list.forEach((r,i)=>{ if(r.status==='Scheduled') scheduled++; if(r.status==='Completed') completed++; const row=document.createElement('tr'); row.className='border-b border-gray-100'; row.innerHTML = `
-        <td>${r.date}</td>
-        <td>${r.customer}</td>
-        <td>${r.region}</td>
-        <td>${r.cam}</td>
-        <td>
-          <select data-idx="${i}" class="input inline-block status-visit" style="min-width:140px;">
-            <option ${r.status==='Scheduled'?'selected':''}>Scheduled</option>
-            <option ${r.status==='Completed'?'selected':''}>Completed</option>
-          </select>
-        </td>
-        <td><button class="btn edit-visit" data-idx="${i}">Edit</button></td>
-      `; tbody.appendChild(row); });
-      document.getElementById('visitsScheduled').textContent = scheduled; document.getElementById('visitsCompleted').textContent = completed;
-      $$('.status-visit').forEach(el=>el.addEventListener('change', (ev)=>{ const idx=+ev.target.dataset.idx; updateVisitFromUI(idx); }));
-      $$('.edit-visit').forEach(btn=>btn.addEventListener('click', (ev)=>{ const idx=+ev.target.dataset.idx; openVisitModal(idx); }));
-    }
-
-    function updateVisitFromUI(idx){ const data=loadData(); const list=applyFiltersTo(data.visits); const item=list[idx]; if(!item) return; const statusEl = document.querySelectorAll('.status-visit')[idx]; item.status = statusEl.value; const local = JSON.parse(localStorage.getItem('visits')||'[]'); local.unshift(item); localStorage.setItem('visits', JSON.stringify(local)); renderVisits(); renderAll(); }
-
-    function openVisitModal(idx){ const data=loadData(); const list=applyFiltersTo(data.visits); const item=list[idx]; if(!item) return; document.getElementById('visitModalTitle').textContent='Edit Visit'; document.getElementById('visitIndex').value = idx; document.getElementById('visitDate').value = item.date; document.getElementById('visitCustomer').value = item.customer; document.getElementById('visitRegion').value = item.region; document.getElementById('visitCAM').value = item.cam; document.getElementById('visitStatus').value = item.status; document.getElementById('visitModal').showModal(); }
-
-    // Add / Save handlers
-    document.getElementById('openAddEnquiry').addEventListener('click', ()=>{ document.getElementById('enqModalTitle').textContent='Add Enquiry'; document.getElementById('enqIndex').value=''; document.getElementById('enquiryModal').showModal(); });
-    document.getElementById('openAddVisit').addEventListener('click', ()=>{ document.getElementById('visitModalTitle').textContent='Add Visit'; document.getElementById('visitIndex').value=''; document.getElementById('visitModal').showModal(); });
-
-    function saveEnquiryFromModal(){ const idx = document.getElementById('enqIndex').value; const item = { date: document.getElementById('enqDate').value, customer: document.getElementById('enqCustomer').value, region: document.getElementById('enqRegion').value, cam: document.getElementById('enqCAM').value, status: document.getElementById('enqStatus').value, qty: parseFloat(document.getElementById('enqQty').value||'0'), reason: document.getElementById('enqReason').value }; if(!item.date||!item.customer||!item.region||!item.cam){ alert('Please fill required fields'); return; } const local = JSON.parse(localStorage.getItem('enquiries')||'[]'); local.unshift(item); localStorage.setItem('enquiries', JSON.stringify(local)); document.getElementById('enquiryModal').close(); renderEnquiries(); renderAll(); }
-    document.getElementById('saveEnquiry').addEventListener('click', saveEnquiryFromModal);
-
-    function saveVisitFromModal(){ const item = { date: document.getElementById('visitDate').value, customer: document.getElementById('visitCustomer').value, region: document.getElementById('visitRegion').value, cam: document.getElementById('visitCAM').value, status: document.getElementById('visitStatus').value }; if(!item.date||!item.customer||!item.region||!item.cam){ alert('Please fill required fields'); return; } const local = JSON.parse(localStorage.getItem('visits')||'[]'); local.unshift(item); localStorage.setItem('visits', JSON.stringify(local)); document.getElementById('visitModal').close(); renderVisits(); renderAll(); }
-    document.getElementById('saveVisit').addEventListener('click', saveVisitFromModal);
-
-    // Filters apply/clear
-    document.getElementById('applyFilters').addEventListener('click', ()=>{ state.region = document.getElementById('filterRegion').value; state.cam = document.getElementById('filterCAM').value.trim(); state.customer = document.getElementById('filterCustomer').value.trim(); state.from = document.getElementById('filterFrom').value; state.to = document.getElementById('filterTo').value; renderAll(); });
-    document.getElementById('clearFilters').addEventListener('click', ()=>{ state = { from:'', to:'', region:'', cam:'', customer:'' }; document.querySelectorAll('#page-dashboard select, #page-dashboard input').forEach(el=>{ if(el.type==='date'||el.tagName==='INPUT') el.value=''; else if(el.tagName==='SELECT') el.selectedIndex=0; }); renderAll(); });
-
-    // Export to xlsx using SheetJS
-    function exportToXLSX(rows, sheetName, fileName){ const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, fileName + '.xlsx'); }
-
-    document.getElementById('exportEnquiriesXlsx').addEventListener('click', ()=>{
-      const data = applyFiltersTo(loadData().enquiries).map(r=>({ Date:r.date, Customer:r.customer, Region:r.region, CAM:r.cam, Status:r.status, Qty:r.qty, LostReason:r.reason }));
-      exportToXLSX(data, 'Enquiries', 'Enquiries_export');
-    });
-
-    document.getElementById('exportVisitsXlsx').addEventListener('click', ()=>{
-      const data = applyFiltersTo(loadData().visits).map(r=>({ Date:r.date, Customer:r.customer, Region:r.region, CAM:r.cam, Status:r.status }));
-      exportToXLSX(data, 'Visits', 'Visits_export');
-    });
-
-    // Initial view
-    showPage('dashboard'); renderAll();
-  </script>
+            // Chart 4: Region-wise Performance (Bar Chart)
+            new Chart(document.getElementById('regionPerformanceChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Kolkata', 'Mumbai', 'North', 'South', 'Vadodara'],
+                    datasets: [{
+                        label: 'Enquiries',
+                        data: [1.8, 2.2, 2.5, 2.0, 1.5],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }, {
+                        label: 'Visits',
+                        data: [1.5, 1.8, 2.0, 1.8, 1.2],
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Chart 5: CAM-wise Performance (Vertical Bar Chart with vertical scroller)
+            new Chart(document.getElementById('camPerformanceChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Rasalgethi Sharma', 'Yogesh Sharma', 'Sanjay Singh', 'Dwengyayu Tyawi', 'Prince Jha', 'Anuj Jain', 'Ankit Kumar Jha', 'Mankeno', 'Tukaram Gatawad', 'Medhak Bhat', 'John Doe', 'Jane Smith'],
+                    datasets: [{
+                        label: 'Enquiry Qty',
+                        data: [1.8, 1.6, 1.5, 1.4, 1.2, 1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }, {
+                        label: 'Visit Count',
+                        data: [1.5, 1.3, 1.2, 1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3],
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: false,
+                            title: {
+                                display: true,
+                                text: 'CAM'
+                            }
+                        },
+                        y: {
+                            stacked: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
+            });
+            
+            // Chart 6: Conversion Funnel (Horizontal Bar Chart)
+            new Chart(document.getElementById('conversionFunnelChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Enquiries', 'Visits', 'Converted', 'Orders'],
+                    datasets: [{
+                        data: [5, 4.5, 2.5, 1.2],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', // This is the key change to make it a horizontal bar chart
+                    plugins: { legend: { display: false } }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
