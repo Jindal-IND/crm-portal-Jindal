@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM JSSL</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN for charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Inter Font -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
@@ -24,17 +22,21 @@
         }
         .modal {
             display: none;
-        }
-        .modal-active {
-            display: block;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
-    <!-- Main Content Wrapper -->
     <div class="flex flex-col flex-1">
-
-        <!-- Header -->
         <header class="bg-white p-4 shadow-md flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <div class="text-xl font-bold text-gray-800">
@@ -47,19 +49,15 @@
                 <div class="flex space-x-1 p-1 bg-gray-200 rounded-full">
                     <button id="dashboardBtn" class="px-4 py-1 rounded-full bg-white text-gray-800 font-semibold">Dashboard</button>
                     <button id="enquiriesBtn" class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Enquiries</button>
-                    <button class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Visits</button>
-                    <button class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Reports</button>
+                    <button id="visitsBtn" class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Visits</button>
+                    <button id="reportsBtn" class="px-4 py-1 rounded-full text-gray-500 hover:bg-white transition-colors duration-200">Reports</button>
                 </div>
             </div>
         </header>
 
-        <!-- Main Body Content -->
-        <div class="flex-1 flex p-6 space-x-6">
-            <!-- Filter Sidebar -->
-            <aside class="w-64 bg-white p-6 rounded-lg shadow-lg flex flex-col">
+        <div id="mainContainer" class="flex-1 flex p-6 space-x-6">
+            <aside id="filterSidebar" class="w-64 bg-white p-6 rounded-lg shadow-lg flex flex-col">
                 <h2 class="font-bold text-lg mb-4 text-gray-800">Filter</h2>
-                
-                <!-- Date Range Filter -->
                 <div class="space-y-4 mb-6">
                     <label class="flex items-center space-x-2 text-gray-700 cursor-pointer">
                         <input type="checkbox" id="date-checkbox" class="h-4 w-4 rounded text-blue-500 focus:ring-blue-500">
@@ -77,8 +75,6 @@
                     </div>
                     <p id="date-display" class="mt-2 text-sm text-gray-500 font-semibold"></p>
                 </div>
-
-                <!-- Region Filter -->
                 <div class="space-y-4 mb-6">
                     <div class="font-semibold text-gray-800">Region</div>
                     <div class="space-y-2">
@@ -104,8 +100,6 @@
                         </label>
                     </div>
                 </div>
-
-                <!-- CAM Dropdown Filter -->
                 <div class="space-y-4 mb-6">
                     <div class="font-semibold text-gray-800">CAM</div>
                     <select id="cam-filter" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -124,8 +118,6 @@
                         <option value="Jane Smith">Jane Smith</option>
                     </select>
                 </div>
-
-                <!-- Customer Dropdown Filter -->
                 <div class="space-y-4 mb-6">
                     <div class="font-semibold text-gray-800">Customer</div>
                     <select id="customer-filter" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -138,72 +130,55 @@
                         <option value="Bold text column">Bold text column</option>
                     </select>
                 </div>
-
-                <!-- Action Buttons -->
                 <div class="flex space-x-2 mt-auto">
                     <button class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Apply</button>
                     <button class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">Clear</button>
                 </div>
             </aside>
 
-            <!-- Main Content Area -->
-            <main class="flex-1 bg-white p-6 rounded-lg shadow-lg flex flex-col">
-                <!-- Dashboard Content -->
+            <main class="flex-1 flex flex-col bg-white p-6 rounded-lg shadow-lg">
                 <div id="dashboardContent" class="space-y-6">
-                    <!-- KPI Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <!-- Total Enquiries -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">TOTAL ENQUIRIES</h3>
                             <p class="text-3xl font-bold text-blue-600 mt-2">10.5K</p>
                         </div>
-                        <!-- Total Visits -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">TOTAL VISITS</h3>
                             <p class="text-3xl font-bold text-blue-600 mt-2">7,265</p>
                         </div>
-                        <!-- Conversion Visit vs Enquiry -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">CONVERSION VISIT VS ENQUIRY</h3>
                             <p class="text-3xl font-bold text-blue-600 mt-2">45%</p>
                         </div>
-                        <!-- Top CAM by Enquiry -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">TOP CAM BY ENQUIRY</h3>
                             <p class="text-lg font-bold text-blue-600 mt-2">Yogesh Sharma: 230 MT</p>
                         </div>
-                        <!-- New Customer Visited -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">NEW CUSTOMER VISITED</h3>
                             <p class="text-3xl font-bold text-blue-600 mt-2">156</p>
                         </div>
-                        <!-- New Customer Enquiry -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">NEW CUSTOMER ENQUIRY</h3>
                             <p class="text-3xl font-bold text-blue-600 mt-2">Count: 2,567</p>
                             <p class="text-lg font-bold text-blue-600 mt-2">MT: 256</p>
                         </div>
-                        <!-- Enquiry Converted -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">ENQUIRY CONVERTED</h3>
                             <p class="text-3xl font-bold text-blue-600 mt-2">7,265</p>
                         </div>
-                        <!-- Enquiry in Process -->
                         <div class="bg-blue-100 p-6 rounded-lg shadow-sm">
                             <h3 class="text-gray-500 text-sm font-medium">ENQUIRY IN PROCESS</h3>
                             <p class="text-3xl font-bold text-blue-600 mt-2">2,318</p>
                         </div>
                     </div>
-                    
-                    <!-- Charts Section -->
+
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Enquiries & Visit Trend Chart -->
                         <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2 lg:col-span-2" style="height: 350px;">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Enquiries & Visit Trend</h2>
                             <canvas id="enquiriesVisitTrendChart"></canvas>
                         </div>
-
-                        <!-- CAM Wise Conversion % -->
                         <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Cam Wise Conversion %</h2>
                             <div class="flex-1 overflow-y-auto scroll-container max-h-80">
@@ -252,44 +227,36 @@
                                         <span>John Doe</span>
                                         <span class="font-bold text-gray-800">9%</span>
                                     </div>
-                                     <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-between">
                                         <span>Jane Smith</span>
                                         <span class="font-bold text-gray-800">8%</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    
-                        <!-- Region Wise Enquiry Loss with Reasons -->
+
                         <div class="bg-white p-6 rounded-lg shadow-lg" style="height: 350px;">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Region Wise Enquiry Loss with Reasons</h2>
                             <canvas id="enquiryLossChart"></canvas>
                         </div>
-                        
-                        <!-- Lost Reason Breakdown -->
+
                         <div class="bg-white p-6 rounded-lg shadow-lg" style="height: 350px;">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Lost Reason Breakdown</h2>
                             <canvas id="lostReasonChart"></canvas>
                         </div>
-                        
-                        <!-- Region-wise Performance -->
+
                         <div class="bg-white p-6 rounded-lg shadow-lg" style="height: 350px;">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Region-wise Performance</h2>
                             <canvas id="regionPerformanceChart"></canvas>
                         </div>
                     </div>
-
-                    <!-- Charts Section that needs to be wider -->
                     <div class="grid grid-cols-1 gap-6">
-                        <!-- CAM-wise Performance -->
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">CAM-wise Performance</h2>
                             <div class="overflow-y-auto" style="height: 450px;">
                                 <canvas id="camPerformanceChart"></canvas>
                             </div>
                         </div>
-
-                        <!-- Conversion Funnel -->
                         <div class="bg-white p-6 rounded-lg shadow-lg">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Conversion Funnel</h2>
                             <div class="overflow-y-auto" style="height: 450px;">
@@ -299,532 +266,1487 @@
                     </div>
                 </div>
 
-                <!-- Table Content (Initially hidden) -->
-                <div id="enquiriesTableContent" class="flex-1 hidden flex-col">
-                    <!-- Table Header Actions -->
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-4">
-                            <div class="text-lg font-semibold text-gray-800">Enquiries</div>
-                            <div class="flex items-center space-x-2 text-gray-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6zm-2 0l-8 5-8-5h16z"/>
-                                </svg>
-                                <span>Filters</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <button class="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors duration-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V8h2v4zm4 4h-2v-2h2v2zm0-4h-2V8h2v4z"/>
-                                </svg>
-                                <span>Export</span>
+                <div id="enquiriesContent" class="space-y-6 hidden">
+                    <div class="flex items-center justify-end mb-4">
+                        <div class="flex space-x-2">
+                            <button id="saveBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                    </svg>
+                                    Save
+                                </span>
                             </button>
-                            <button id="addEnquiryBtn" class="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                                </svg>
-                                <span>Add new ENQ</span>
+                            <button id="deleteBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-red-600 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete Selected
+                                </span>
+                            </button>
+                            <button id="exportBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Export
+                                </span>
+                            </button>
+                            <button id="addNewEnquiryBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-600 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Add new ENQ
+                                </span>
                             </button>
                         </div>
                     </div>
-
-                    <!-- Table -->
-                    <div class="flex-1 overflow-x-auto scroll-container">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                    <div class="overflow-x-auto bg-gray-50 rounded-lg shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200" id="enquiriesTable">
+                            <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500">
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" id="selectAll" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        CUSTOMER NAME
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block ml-1" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 2l-5 5h10l-5-5zM12 22l5-5H7l5 5z"/>
-                                        </svg>
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        CUSTOMER CODE
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        CAM NAME
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        REGION
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        DATE
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ENQUIRY STATUS
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        GRADE
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        WIDTH
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        FINISH
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        THICKNESS
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ACTION
-                                    </th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer Code</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CAM Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Region</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enquiry Status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grade</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Width</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Finish</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Thickness</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Segment</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enquiry Qty (MT)</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enq qty for status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Reason For Loss</th>
+                                    <th class="px-4 py-2 whitespace-nowrap text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <!-- Dummy Data Row 1 -->
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">VIKAS STEEL</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">MEDHAK BHAT</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">NORTH</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">CONVERTED</span></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">304</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1250</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">N4</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Vikas Steel">Change Status</button>
+                            <tbody class="bg-white divide-y divide-gray-200" id="enquiriesTableBody">
+                                <tr data-cam="MEHAK BHAT" data-region="NORTH">
+                                    <td class="px-4 py-2 whitespace-nowrap"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                                    <td class="px-4 py-2 whitespace-nowrap font-bold text-gray-900">VIKAS STEEL</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">42034567898888</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">MEHAK BHAT</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">NORTH</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-4 py-2 whitespace-nowrap">
+                                        <select class="status-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" data-original-status="CONVERTED">
+                                            <option value="NEUTRAL" class="bg-gray-100 text-gray-800">Neutral</option>
+                                            <option value="CONVERTED" class="bg-green-100 text-green-800" selected>Converted</option>
+                                            <option value="INPROCESS" class="bg-yellow-100 text-yellow-800">In Process</option>
+                                            <option value="LOST" class="bg-red-100 text-red-800">Lost</option>
+                                        </select>
                                     </td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">304</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">1250</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">N4</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">Auto</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">20</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">15</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">
+                                        <select class="reason-loss-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" disabled>
+                                            <option value="" disabled selected>-</option>
+                                            <option value="Price too high">Price too high</option>
+                                            <option value="Competitor Offer">Competitor Offer</option>
+                                            <option value="Product not suitable">Product not suitable</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500"></td>
                                 </tr>
-                                <!-- Dummy Data Row 2 -->
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">SAI SALES</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">YOGESH SHARMA</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">NORTH</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">LOST</span></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">430</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2500</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">MIRROR</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Sai Sales">Change Status</button>
+                                <tr data-cam="YOGESH SHARMA" data-region="NORTH">
+                                    <td class="px-4 py-2 whitespace-nowrap"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                                    <td class="px-4 py-2 whitespace-nowrap font-bold text-gray-900">SAI SALES</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">42034567898888</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">YOGESH SHARMA</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">NORTH</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-4 py-2 whitespace-nowrap">
+                                        <select class="status-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" data-original-status="CONVERTED">
+                                            <option value="NEUTRAL" class="bg-gray-100 text-gray-800">Neutral</option>
+                                            <option value="CONVERTED" class="bg-green-100 text-green-800" selected>Converted</option>
+                                            <option value="INPROCESS" class="bg-yellow-100 text-yellow-800">In Process</option>
+                                            <option value="LOST" class="bg-red-100 text-red-800">Lost</option>
+                                        </select>
                                     </td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">430</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">2500</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">MIRROR</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">Industrial</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">15</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">5</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">
+                                        <select class="reason-loss-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" disabled>
+                                            <option value="" disabled selected>-</option>
+                                            <option value="Price too high">Price too high</option>
+                                            <option value="Competitor Offer">Competitor Offer</option>
+                                            <option value="Product not suitable">Product not suitable</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500"></td>
                                 </tr>
-                                <!-- More dummy rows to fill the table -->
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">AVIRAJ STEEL</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">SANJAY SINGH</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">SOUTH</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">INPROCESS</span></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">JT</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1250</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2B</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Aviraj Steel">Change Status</button>
+                                <tr data-cam="SANJAY SINGH" data-region="SOUTH">
+                                    <td class="px-4 py-2 whitespace-nowrap"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                                    <td class="px-4 py-2 whitespace-nowrap font-bold text-gray-900">AVIRAJ STEEL</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">42034567898888</td>
+                                    <td class="px-4 py-2 whitespace-now-
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">SANJAY SINGH</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">SOUTH</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-4 py-2 whitespace-nowrap">
+                                        <select class="status-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" data-original-status="LOST">
+                                            <option value="NEUTRAL" class="bg-gray-100 text-gray-800">Neutral</option>
+                                            <option value="CONVERTED" class="bg-green-100 text-green-800">Converted</option>
+                                            <option value="INPROCESS" class="bg-yellow-100 text-yellow-800">In Process</option>
+                                            <option value="LOST" class="bg-red-100 text-red-800" selected>Lost</option>
+                                        </select>
                                     </td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">JT</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">2500</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">2B</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">Automotive</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">30</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">20</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">
+                                        <select class="reason-loss-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" data-original-reason="Price too high">
+                                            <option value="" disabled>-</option>
+                                            <option value="Price too high" selected>Price too high</option>
+                                            <option value="Competitor Offer">Competitor Offer</option>
+                                            <option value="Product not suitable">Product not suitable</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">Customer went with a different vendor due to a better price.</td>
                                 </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">SSNS</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">DEFEEYAYU TYAWI</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">SOUTH</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">CONVERTED</span></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">304L</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1250</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2B</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="SSNS">Change Status</button>
+                                <tr data-cam="PRINCE JHA" data-region="NORTH">
+                                    <td class="px-4 py-2 whitespace-nowrap"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                                    <td class="px-4 py-2 whitespace-nowrap font-bold text-gray-900">OYUUH</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">42034567898888</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">PRINCE JHA</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">NORTH</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">09-08-2025</td>
+                                    <td class="px-4 py-2 whitespace-nowrap">
+                                        <select class="status-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" data-original-status="INPROCESS">
+                                            <option value="NEUTRAL" class="bg-gray-100 text-gray-800">Neutral</option>
+                                            <option value="CONVERTED" class="bg-green-100 text-green-800">Converted</option>
+                                            <option value="INPROCESS" class="bg-yellow-100 text-yellow-800" selected>In Process</option>
+                                            <option value="LOST" class="bg-red-100 text-red-800">Lost</option>
+                                        </select>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">OYUUH</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">PRINCE JHA</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">NORTH</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">INPROCESS</span></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">JT</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">3402</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2B</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="OYUUH">Change Status</button>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">JT</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">3402</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">2B</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">1.2</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">Construction</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">55</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500"></td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500">
+                                        <select class="reason-loss-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" disabled>
+                                            <option value="" disabled selected>-</option>
+                                            <option value="Price too high">Price too high</option>
+                                            <option value="Competitor Offer">Competitor Offer</option>
+                                            <option value="Product not suitable">Product not suitable</option>
+                                            <option value="Other">Other</option>
+                                        </select>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold">Bold text column</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">420334567898888</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">AJAY SHOKHAWAT</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">MUMBAI</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">09-08-2025</td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">CONVERTED</span></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">204CU</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">2500</td>
-                                    <td class="px-6 py-4 whitespace-now-rap text-gray-500">SB</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">1.2</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button class="text-blue-500 hover:text-blue-700 change-status-btn" data-customer="Bold text column">Change Status</button>
-                                    </td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-500"></td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div id="visitsContent" class="space-y-6 hidden">
+                    <div class="flex items-center justify-end mb-4">
+                        <div class="flex space-x-2">
+                            <button id="saveVisitsBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                    </svg>
+                                    Save
+                                </span>
+                            </button>
+                            <button id="deleteVisitsBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-red-600 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete Selected
+                                </span>
+                            </button>
+                            <button id="exportVisitsBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Export
+                                </span>
+                            </button>
+                            <button id="addNewVisitBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-600 transition-colors duration-200">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Add new Visit
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto bg-gray-50 rounded-lg shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200" id="visitsTable">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" id="selectAllVisits" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    </th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer Code</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">CAM Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Region</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">City</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Scheduled Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Completion Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="visitsTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="reportsContent" class="space-y-6 hidden">
+                    <div class="flex items-center justify-end mb-4">
+                        <button id="exportReportsBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors duration-200">
+                            <span class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Export
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Monthly Reports</h2>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
+                                <span class="font-medium text-gray-700">Report - August 2025</span>
+                                <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors duration-200">View Report</button>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
+                                <span class="font-medium text-gray-700">Report - July 2025</span>
+                                <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors duration-200">View Report</button>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
+                                <span class="font-medium text-gray-700">Report - June 2025</span>
+                                <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors duration-200">View Report</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Custom Report Generation</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="report-type" class="block text-sm font-medium text-gray-700">Select Report Type</label>
+                                <select id="report-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                                    <option>Enquiries Summary</option>
+                                    <option>Visits Summary</option>
+                                    <option>Conversion Funnel</option>
+                                    <option>CAM Performance</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="report-duration" class="block text-sm font-medium text-gray-700">Select Duration</label>
+                                <select id="report-duration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                                    <option>Last 7 Days</option>
+                                    <option>Last 30 Days</option>
+                                    <option>Last 90 Days</option>
+                                    <option>Custom Date Range</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button id="generateReportBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Generate Report</button>
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Add Enquiry Modal -->
-    <div id="addEnquiryModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
-            <div class="flex justify-between items-center pb-3">
-                <h3 class="text-lg font-bold">Add Enquiry</h3>
-                <button id="closeEnquiryModal" class="text-gray-400 hover:text-gray-600">&times;</button>
+    <div id="addEnquiryModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-1/3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Add New Enquiry</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
-            <div class="mt-2">
-                <form class="space-y-4">
-                    <div>
-                        <label class="block text-gray-700">Customer Name:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">CAM NAME:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Grade:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">QTY:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Thickness:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Finish:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Width:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Length:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Save</button>
-                </form>
-            </div>
+            <form class="grid grid-cols-2 gap-4" id="enquiryForm">
+                <div>
+                    <label for="new-customer-name" class="block text-sm font-medium text-gray-700">Customer Name</label>
+                    <input type="text" id="new-customer-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2" list="customer-list">
+                    <datalist id="customer-list">
+                        <option value="VIKAS STEEL"></option>
+                        <option value="SAI SALES"></option>
+                        <option value="AVIRAJ STEEL"></option>
+                        <option value="SSNS"></option>
+                        <option value="OYUUH"></option>
+                    </datalist>
+                </div>
+                <div>
+                    <label for="new-customer-code" class="block text-sm font-medium text-gray-700">Customer Code</label>
+                    <input type="text" id="new-customer-code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div>
+                    <label for="new-cam-name" class="block text-sm font-medium text-gray-700">CAM Name</label>
+                    <select id="new-cam-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select CAM</option>
+                        <option value="Yogesh Sharma">Yogesh Sharma</option>
+                        <option value="Tukaram Gatawad">Tukaram Gatawad</option>
+                        <option value="Dwengyayu Tyawi">Dwengyayu Tyawi</option>
+                        <option value="Mankeno">Mankeno</option>
+                        <option value="Ankit Kumar Jha">Ankit Kumar Jha</option>
+                        <option value="Anuj Jain">Anuj Jain</option>
+                        <option value="Medhak Bhat">Medhak Bhat</option>
+                        <option value="Sanjay Singh">Sanjay Singh</option>
+                        <option value="Prince Jha">Prince Jha</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-region" class="block text-sm font-medium text-gray-700">Region</label>
+                    <select id="new-region" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select Region</option>
+                        <option value="NORTH">North</option>
+                        <option value="SOUTH">South</option>
+                        <option value="EAST">East</option>
+                        <option value="WEST">West</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-date" class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" id="new-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div>
+                    <label for="new-grade" class="block text-sm font-medium text-gray-700">Grade</label>
+                    <select id="new-grade" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select Grade</option>
+                        <option value="304">304</option>
+                        <option value="430">430</option>
+                        <option value="JT">JT</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-width" class="block text-sm font-medium text-gray-700">Width</label>
+                    <select id="new-width" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select Width</option>
+                        <option value="1250">1250</option>
+                        <option value="2500">2500</option>
+                        <option value="3402">3402</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-finish" class="block text-sm font-medium text-gray-700">Finish</label>
+                    <select id="new-finish" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="N4">N4</option>
+                        <option value="MIRROR">MIRROR</option>
+                        <option value="2B">2B</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-thickness" class="block text-sm font-medium text-gray-700">Thickness</label>
+                    <select id="new-thickness" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select Thickness</option>
+                        <option value="1.2">1.2</option>
+                        <option value="2.0">2.0</option>
+                        <option value="3.0">3.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-segment" class="block text-sm font-medium text-gray-700">Segment</label>
+                    <select id="new-segment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select Segment</option>
+                        <option value="Automotive">Automotive</option>
+                        <option value="Industrial">Industrial</option>
+                        <option value="Construction">Construction</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-enquiry-qty" class="block text-sm font-medium text-gray-700">Enquiry Qty (MT)</label>
+                    <input type="number" id="new-enquiry-qty" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div class="col-span-2">
+                    <label for="new-remarks" class="block text-sm font-medium text-gray-700">Remarks</label>
+                    <textarea id="new-remarks" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"></textarea>
+                </div>
+                <div class="col-span-2 flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Save Enquiry</button>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <!-- Change Status Modal -->
-    <div id="changeStatusModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
-            <div class="flex justify-between items-center pb-3">
-                <h3 class="text-lg font-bold">You are changing the status of enquiry for <span id="customerNameSpan"></span></h3>
-                <button id="closeStatusModal" class="text-gray-400 hover:text-gray-600">&times;</button>
+
+    <div id="addVisitModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-1/3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Add New Visit</h3>
+                <button id="closeVisitModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
-            <div class="mt-2">
-                <form class="space-y-4">
-                    <div>
-                        <label class="block text-gray-700">To proceed, please fill the following details:</label>
-                        <select class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option>Convert</option>
-                            <option>Inprocess</option>
-                            <option>Lost</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Lost Quantity:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                     <div>
-                        <label class="block text-gray-700">Reason For Lost Qty:</label>
-                        <input type="text" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">Remarks (Optional):</label>
-                        <textarea class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Save</button>
-                </form>
-            </div>
+            <form class="grid grid-cols-2 gap-4" id="visitForm">
+                <div>
+                    <label for="new-visit-customer-name" class="block text-sm font-medium text-gray-700">Customer Name</label>
+                    <input type="text" id="new-visit-customer-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2" list="customer-list">
+                    <datalist id="customer-list">
+                        <option value="VIKAS STEEL"></option>
+                        <option value="SAI SALES"></option>
+                        <option value="AVIRAJ STEEL"></option>
+                        <option value="SSNS"></option>
+                        <option value="OYUUH"></option>
+                    </datalist>
+                </div>
+                <div>
+                    <label for="new-visit-customer-code" class="block text-sm font-medium text-gray-700">Customer Code</label>
+                    <input type="text" id="new-visit-customer-code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div>
+                    <label for="new-visit-cam-name" class="block text-sm font-medium text-gray-700">CAM Name</label>
+                    <select id="new-visit-cam-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select CAM</option>
+                        <option value="Yogesh Sharma">Yogesh Sharma</option>
+                        <option value="Tukaram Gatawad">Tukaram Gatawad</option>
+                        <option value="Dwengyayu Tyawi">Dwengyayu Tyawi</option>
+                        <option value="Mankeno">Mankeno</option>
+                        <option value="Ankit Kumar Jha">Ankit Kumar Jha</option>
+                        <option value="Anuj Jain">Anuj Jain</option>
+                        <option value="Medhak Bhat">Medhak Bhat</option>
+                        <option value="Sanjay Singh">Sanjay Singh</option>
+                        <option value="Prince Jha">Prince Jha</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-visit-region" class="block text-sm font-medium text-gray-700">Region</label>
+                    <select id="new-visit-region" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select Region</option>
+                        <option value="NORTH">North</option>
+                        <option value="SOUTH">South</option>
+                        <option value="EAST">East</option>
+                        <option value="WEST">West</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-visit-city" class="block text-sm font-medium text-gray-700">City</label>
+                    <input type="text" id="new-visit-city" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div>
+                    <label for="new-visit-schedule-date" class="block text-sm font-medium text-gray-700">Scheduled Date</label>
+                    <input type="date" id="new-visit-schedule-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div>
+                    <label for="new-visit-status" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="new-visit-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="SCHEDULED">Scheduled</option>
+                        <option value="COMPLETED">Completed</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label for="new-visit-remarks" class="block text-sm font-medium text-gray-700">Remarks</label>
+                    <textarea id="new-visit-remarks" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"></textarea>
+                </div>
+                <div class="col-span-2 flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Save Visit</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <div id="updateStatusModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-1/3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="updateModalTitle" class="text-xl font-bold text-gray-800">Update Enquiry Status</h3>
+                <button id="closeUpdateModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form class="grid grid-cols-1 gap-4" id="updateStatusForm">
+                <div>
+                    <label for="update-enquiry-qty" class="block text-sm font-medium text-gray-700">Enquiry Qty (MT)</label>
+                    <input type="number" id="update-enquiry-qty" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2" disabled>
+                </div>
+                <div id="lost-qty-group">
+                    <label for="update-enq-qty-for-status" class="block text-sm font-medium text-gray-700">Enq qty for status</label>
+                    <input type="number" id="update-enq-qty-for-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div id="reason-lost-group" class="hidden">
+                    <label for="update-reason-for-loss" class="block text-sm font-medium text-gray-700">Reason for Loss</label>
+                    <select id="update-reason-for-loss" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                        <option value="" disabled selected>Select a reason</option>
+                        <option value="Price too high">Price too high</option>
+                        <option value="Competitor Offer">Competitor Offer</option>
+                        <option value="Product not suitable">Product not suitable</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="update-remarks" class="block text-sm font-medium text-gray-700">Remarks</label>
+                    <textarea id="update-remarks" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelUpdateBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="updateVisitStatusModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-1/3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Update Visit Status</h3>
+                <button id="closeUpdateVisitModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form class="grid grid-cols-1 gap-4" id="updateVisitStatusForm">
+                <div>
+                    <label for="update-visit-completion-date" class="block text-sm font-medium text-gray-700">Completion Date</label>
+                    <input type="date" id="update-visit-completion-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelUpdateVisitBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Get content sections
-            const dashboardContent = document.getElementById('dashboardContent');
-            const enquiriesTableContent = document.getElementById('enquiriesTableContent');
-
-            // Get navigation buttons
             const dashboardBtn = document.getElementById('dashboardBtn');
             const enquiriesBtn = document.getElementById('enquiriesBtn');
-            
-            // Initial state: show dashboard
-            dashboardContent.classList.remove('hidden');
-            enquiriesTableContent.classList.add('hidden');
-            
-            // Toggle visibility on button click
-            dashboardBtn.addEventListener('click', () => {
-                dashboardContent.classList.remove('hidden');
-                enquiriesTableContent.classList.add('hidden');
-                dashboardBtn.classList.add('bg-white', 'text-gray-800');
-                enquiriesBtn.classList.remove('bg-white', 'text-gray-800');
-                enquiriesBtn.classList.add('text-gray-500');
-            });
-            
-            enquiriesBtn.addEventListener('click', () => {
-                enquiriesTableContent.classList.remove('hidden');
-                dashboardContent.classList.add('hidden');
-                enquiriesBtn.classList.add('bg-white', 'text-gray-800');
-                dashboardBtn.classList.remove('bg-white', 'text-gray-800');
-                dashboardBtn.classList.add('text-gray-500');
-            });
-
-            // Modals for Add Enquiry and Change Status
-            const addEnquiryBtn = document.getElementById('addEnquiryBtn');
+            const visitsBtn = document.getElementById('visitsBtn');
+            const reportsBtn = document.getElementById('reportsBtn');
+            const dashboardContent = document.getElementById('dashboardContent');
+            const enquiriesContent = document.getElementById('enquiriesContent');
+            const visitsContent = document.getElementById('visitsContent');
+            const reportsContent = document.getElementById('reportsContent');
+            const addNewEnquiryBtn = document.getElementById('addNewEnquiryBtn');
             const addEnquiryModal = document.getElementById('addEnquiryModal');
-            const closeEnquiryModal = document.getElementById('closeEnquiryModal');
-            
-            addEnquiryBtn.addEventListener('click', () => {
-                addEnquiryModal.classList.add('modal-active');
-            });
-            
-            closeEnquiryModal.addEventListener('click', () => {
-                addEnquiryModal.classList.remove('modal-active');
-            });
-
-            const changeStatusBtns = document.querySelectorAll('.change-status-btn');
-            const changeStatusModal = document.getElementById('changeStatusModal');
-            const closeStatusModal = document.getElementById('closeStatusModal');
-            const customerNameSpan = document.getElementById('customerNameSpan');
-
-            changeStatusBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const customerName = btn.getAttribute('data-customer');
-                    customerNameSpan.textContent = customerName;
-                    changeStatusModal.classList.add('modal-active');
-                });
-            });
-
-            closeStatusModal.addEventListener('click', () => {
-                changeStatusModal.classList.remove('modal-active');
-            });
-
-            // Date range filter logic
+            const closeAddModalBtn = document.getElementById('closeModalBtn');
+            const enquiryForm = document.getElementById('enquiryForm');
+            const enquiriesTableBody = document.getElementById('enquiriesTableBody');
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const updateStatusModal = document.getElementById('updateStatusModal');
+            const updateModalTitle = document.getElementById('updateModalTitle');
+            const reasonLostGroup = document.getElementById('reason-lost-group');
+            const closeUpdateModalBtn = document.getElementById('closeUpdateModalBtn');
+            const updateStatusForm = document.getElementById('updateStatusForm');
+            const cancelUpdateBtn = document.getElementById('cancelUpdateBtn');
+            const updateEnquiryQtyInput = document.getElementById('update-enquiry-qty');
+            const updateEnqQtyForStatusInput = document.getElementById('update-enq-qty-for-status');
+            const updateReasonSelect = document.getElementById('update-reason-for-loss');
+            const updateRemarksInput = document.getElementById('update-remarks');
             const dateCheckbox = document.getElementById('date-checkbox');
             const dateFilterOptions = document.getElementById('date-filter-options');
             const startDateInput = document.getElementById('start-date');
             const endDateInput = document.getElementById('end-date');
             const dateDisplay = document.getElementById('date-display');
+            
+            // New Visit Page Elements
+            const addNewVisitBtn = document.getElementById('addNewVisitBtn');
+            const addVisitModal = document.getElementById('addVisitModal');
+            const closeVisitModalBtn = document.getElementById('closeVisitModalBtn');
+            const visitForm = document.getElementById('visitForm');
+            const visitsTableBody = document.getElementById('visitsTableBody');
+            const selectAllVisitsCheckbox = document.getElementById('selectAllVisits');
+            const deleteVisitsBtn = document.getElementById('deleteVisitsBtn');
+            const exportVisitsBtn = document.getElementById('exportVisitsBtn');
+            const saveVisitsBtn = document.getElementById('saveVisitsBtn');
+            
+            const updateVisitStatusModal = document.getElementById('updateVisitStatusModal');
+            const closeUpdateVisitModalBtn = document.getElementById('closeUpdateVisitModalBtn');
+            const updateVisitStatusForm = document.getElementById('updateVisitStatusForm');
+            const cancelUpdateVisitBtn = document.getElementById('cancelUpdateVisitBtn');
+            const updateVisitCompletionDateInput = document.getElementById('update-visit-completion-date');
 
+            let currentRowToUpdate = null;
+            let currentVisitRowToUpdate = null;
+
+            // Define initial data
+            const initialEnquiriesData = [
+                {
+                    customerName: "VIKAS STEEL", customerCode: "42034567898888", camName: "MEHAK BHAT", region: "NORTH", date: "09-08-2025", status: "CONVERTED", originalStatus: "CONVERTED", grade: "304", width: "1250", finish: "N4", thickness: "1.2", segment: "Auto", enquiryQty: "20", enqQtyForStatus: "15", reasonForLoss: "", remarks: ""
+                },
+                {
+                    customerName: "SAI SALES", customerCode: "42034567898888", camName: "YOGESH SHARMA", region: "NORTH", date: "09-08-2025", status: "CONVERTED", originalStatus: "CONVERTED", grade: "430", width: "2500", finish: "MIRROR", thickness: "1.2", segment: "Industrial", enquiryQty: "15", enqQtyForStatus: "5", reasonForLoss: "", remarks: ""
+                },
+                {
+                    customerName: "AVIRAJ STEEL", customerCode: "42034567898888", camName: "SANJAY SINGH", region: "SOUTH", date: "09-08-2025", status: "LOST", originalStatus: "LOST", grade: "JT", width: "2500", finish: "2B", thickness: "1.2", segment: "Automotive", enquiryQty: "30", enqQtyForStatus: "20", reasonForLoss: "Price too high", remarks: "Customer went with a different vendor due to a better price."
+                },
+                {
+                    customerName: "OYUUH", customerCode: "42034567898888", camName: "PRINCE JHA", region: "NORTH", date: "09-08-2025", status: "INPROCESS", originalStatus: "INPROCESS", grade: "JT", width: "3402", finish: "2B", thickness: "1.2", segment: "Construction", enquiryQty: "55", enqQtyForStatus: "", reasonForLoss: "", remarks: ""
+                }
+            ];
+            
+            const initialVisitsData = [
+                {
+                    customerName: "VIKAS STEEL", customerCode: "42034567898888", camName: "MEHAK BHAT", region: "NORTH", city: "Gurgaon", scheduledDate: "09-08-2025", status: "SCHEDULED", originalStatus: "SCHEDULED", completionDate: "", remarks: "Initial scheduled visit."
+                },
+                {
+                    customerName: "SAI SALES", customerCode: "42034567898888", camName: "YOGESH SHARMA", region: "NORTH", city: "Noida", scheduledDate: "08-08-2025", status: "COMPLETED", originalStatus: "COMPLETED", completionDate: "08-08-2025", remarks: "Successful meeting with the client."
+                }
+            ];
+
+            // Function to load data from localStorage
+            function loadEnquiriesFromLocalStorage() {
+                const savedData = localStorage.getItem('enquiriesData');
+                if (savedData) {
+                    return JSON.parse(savedData);
+                }
+                return initialEnquiriesData;
+            }
+
+            // Function to save data to localStorage
+            function saveEnquiriesToLocalStorage() {
+                const rows = Array.from(enquiriesTableBody.rows);
+                const dataToSave = rows.map(row => {
+                    const cells = row.cells;
+                    const statusSelect = cells[6].querySelector('.status-select');
+                    const reasonSelect = cells[14].querySelector('.reason-loss-select');
+                    return {
+                        customerName: cells[1].textContent,
+                        customerCode: cells[2].textContent,
+                        camName: cells[3].textContent,
+                        region: cells[4].textContent,
+                        date: cells[5].textContent,
+                        status: statusSelect.value,
+                        originalStatus: statusSelect.getAttribute('data-original-status'),
+                        grade: cells[7].textContent,
+                        width: cells[8].textContent,
+                        finish: cells[9].textContent,
+                        thickness: cells[10].textContent,
+                        segment: cells[11].textContent,
+                        enquiryQty: cells[12].textContent,
+                        enqQtyForStatus: cells[13].textContent,
+                        reasonForLoss: reasonSelect.value,
+                        remarks: cells[15].textContent
+                    };
+                });
+                localStorage.setItem('enquiriesData', JSON.stringify(dataToSave));
+                alert('Enquiry changes saved successfully!');
+            }
+
+            // Function to render the enquiries table from data
+            function renderEnquiriesTable(data) {
+                enquiriesTableBody.innerHTML = '';
+                data.forEach(item => {
+                    const newRow = enquiriesTableBody.insertRow();
+                    newRow.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                        <td class="px-4 py-2 whitespace-nowrap font-bold text-gray-900">${item.customerName}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.customerCode}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.camName}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.region}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.date}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <select class="status-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" data-original-status="${item.originalStatus}">
+                                <option value="NEUTRAL" class="bg-gray-100 text-gray-800" ${item.status === 'NEUTRAL' ? 'selected' : ''}>Neutral</option>
+                                <option value="CONVERTED" class="bg-green-100 text-green-800" ${item.status === 'CONVERTED' ? 'selected' : ''}>Converted</option>
+                                <option value="INPROCESS" class="bg-yellow-100 text-yellow-800" ${item.status === 'INPROCESS' ? 'selected' : ''}>In Process</option>
+                                <option value="LOST" class="bg-red-100 text-red-800" ${item.status === 'LOST' ? 'selected' : ''}>Lost</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.grade}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.width}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.finish}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.thickness}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.segment}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.enquiryQty}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.enqQtyForStatus}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">
+                            <select class="reason-loss-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" ${item.status === 'LOST' ? '' : 'disabled'}>
+                                <option value="" disabled ${item.reasonForLoss === '' ? 'selected' : ''}>-</option>
+                                <option value="Price too high" ${item.reasonForLoss === 'Price too high' ? 'selected' : ''}>Price too high</option>
+                                <option value="Competitor Offer" ${item.reasonForLoss === 'Competitor Offer' ? 'selected' : ''}>Competitor Offer</option>
+                                <option value="Product not suitable" ${item.reasonForLoss === 'Product not suitable' ? 'selected' : ''}>Product not suitable</option>
+                                <option value="Other" ${item.reasonForLoss === 'Other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.remarks}</td>
+                    `;
+                });
+            }
+
+            // New Visit Data Functions
+            function loadVisitsFromLocalStorage() {
+                const savedData = localStorage.getItem('visitsData');
+                if (savedData) {
+                    return JSON.parse(savedData);
+                }
+                return initialVisitsData;
+            }
+
+            function saveVisitsToLocalStorage() {
+                const rows = Array.from(visitsTableBody.rows);
+                const dataToSave = rows.map(row => {
+                    const cells = row.cells;
+                    const statusSelect = cells[7].querySelector('.visit-status-select');
+                    return {
+                        customerName: cells[1].textContent,
+                        customerCode: cells[2].textContent,
+                        camName: cells[3].textContent,
+                        region: cells[4].textContent,
+                        city: cells[5].textContent,
+                        scheduledDate: cells[6].textContent,
+                        status: statusSelect.value,
+                        originalStatus: statusSelect.getAttribute('data-original-status'),
+                        completionDate: cells[8].textContent,
+                        remarks: cells[9].textContent
+                    };
+                });
+                localStorage.setItem('visitsData', JSON.stringify(dataToSave));
+                alert('Visit changes saved successfully!');
+            }
+
+            function renderVisitsTable(data) {
+                visitsTableBody.innerHTML = '';
+                data.forEach(item => {
+                    const newRow = visitsTableBody.insertRow();
+                    newRow.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                        <td class="px-4 py-2 whitespace-nowrap font-bold text-gray-900">${item.customerName}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.customerCode}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.camName}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.region}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.city}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.scheduledDate}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <select class="visit-status-select px-2 py-1 rounded-full text-xs font-semibold focus:outline-none" data-original-status="${item.originalStatus}">
+                                <option value="SCHEDULED" class="bg-gray-100 text-gray-800" ${item.status === 'SCHEDULED' ? 'selected' : ''}>Scheduled</option>
+                                <option value="COMPLETED" class="bg-green-100 text-green-800" ${item.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.completionDate}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${item.remarks}</td>
+                    `;
+                    const statusSelect = newRow.querySelector('.visit-status-select');
+                    updateVisitStatusSelectColor(statusSelect);
+                });
+            }
+
+            function updateUI(view) {
+                // Remove active classes from all buttons
+                dashboardBtn.classList.remove('bg-white', 'text-gray-800');
+                enquiriesBtn.classList.remove('bg-white', 'text-gray-800');
+                visitsBtn.classList.remove('bg-white', 'text-gray-800');
+                reportsBtn.classList.remove('bg-white', 'text-gray-800');
+
+                // Hide all content sections
+                dashboardContent.classList.add('hidden');
+                enquiriesContent.classList.add('hidden');
+                visitsContent.classList.add('hidden');
+                reportsContent.classList.add('hidden');
+                
+                // Show the selected content and activate the button
+                if (view === 'dashboard') {
+                    dashboardBtn.classList.add('bg-white', 'text-gray-800');
+                    dashboardContent.classList.remove('hidden');
+                } else if (view === 'enquiries') {
+                    enquiriesBtn.classList.add('bg-white', 'text-gray-800');
+                    enquiriesContent.classList.remove('hidden');
+                } else if (view === 'visits') {
+                    visitsBtn.classList.add('bg-white', 'text-gray-800');
+                    visitsContent.classList.remove('hidden');
+                } else if (view === 'reports') {
+                    reportsBtn.classList.add('bg-white', 'text-gray-800');
+                    reportsContent.classList.remove('hidden');
+                }
+            }
+
+            dashboardBtn.addEventListener('click', () => updateUI('dashboard'));
+            enquiriesBtn.addEventListener('click', () => updateUI('enquiries'));
+            visitsBtn.addEventListener('click', () => {
+                updateUI('visits');
+                renderVisitsTable(loadVisitsFromLocalStorage());
+                attachVisitsTableListeners();
+            });
+            reportsBtn.addEventListener('click', () => updateUI('reports'));
+            
+            // --- Date Range Filter Logic ---
             dateCheckbox.addEventListener('change', () => {
                 dateFilterOptions.classList.toggle('hidden', !dateCheckbox.checked);
-                dateDisplay.textContent = '';
-                startDateInput.value = '';
-                endDateInput.value = '';
             });
 
-            const updateDateDisplay = () => {
-                const start = startDateInput.value;
-                const end = endDateInput.value;
-                if (start && end) {
-                    dateDisplay.textContent = `Selected: ${start} to ${end}`;
-                } else if (start) {
-                    dateDisplay.textContent = `Selected: From ${start}`;
-                } else if (end) {
-                    dateDisplay.textContent = `Selected: To ${end}`;
+            function updateDateDisplay() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+                if (startDate && endDate) {
+                    dateDisplay.textContent = `${startDate} to ${endDate}`;
+                } else if (startDate) {
+                    dateDisplay.textContent = `From ${startDate}`;
+                } else if (endDate) {
+                    dateDisplay.textContent = `To ${endDate}`;
                 } else {
                     dateDisplay.textContent = '';
                 }
-            };
-
+            }
+            
             startDateInput.addEventListener('change', updateDateDisplay);
             endDateInput.addEventListener('change', updateDateDisplay);
 
+            // --- End of Date Range Filter Logic ---
 
-            // --- Chart.js Initializations ---
-
-            // Chart 1: Enquiries & Visit Trend (Line Chart)
-            new Chart(document.getElementById('enquiriesVisitTrendChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Enquiries',
-                        data: [1.2, 1.5, 1.8, 1.6, 1.9, 1.7, 2.0],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        fill: false,
-                        tension: 0.4
-                    }, {
-                        label: 'Visits',
-                        data: [1.1, 1.4, 1.6, 1.5, 1.7, 1.8, 2.1],
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                        fill: false,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    }
-                }
+            // --- Enquiry Page Functions ---
+            addNewEnquiryBtn.addEventListener('click', () => {
+                enquiryForm.reset();
+                addEnquiryModal.style.display = 'flex';
             });
 
-            // Chart 2: Region Wise Enquiry Loss with Reasons (Grouped Bar Chart)
-            new Chart(document.getElementById('enquiryLossChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Mumbai', 'North', 'South', 'Vadodara'],
-                    datasets: [{
-                        label: 'Price',
-                        data: [1.8, 2.2, 1.5, 1.0],
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 5
-                    }, {
-                        label: 'Profit',
-                        data: [1.5, 1.8, 1.2, 0.8],
-                        backgroundColor: '#6b7280',
-                        borderRadius: 5
-                    }, {
-                        label: 'Not Interest',
-                        data: [1.0, 1.3, 1.0, 0.5],
-                        backgroundColor: '#ef4444',
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { stacked: true },
-                        y: { stacked: true }
-                    }
-                }
+            closeAddModalBtn.addEventListener('click', () => {
+                enquiryForm.reset();
+                addEnquiryModal.style.display = 'none';
             });
-
-            // Chart 3: Lost Reason Breakdown (Doughnut Chart)
-            new Chart(document.getElementById('lostReasonChart').getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Price', 'BM', 'Other'],
-                    datasets: [{
-                        data: [52.1, 27.2, 11.2],
-                        backgroundColor: ['#3b82f6', '#6b7280', '#ef4444'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '80%',
-                    plugins: {
-                        legend: { position: 'right' }
-                    }
-                }
-            });
-
-            // Chart 4: Region-wise Performance (Bar Chart)
-            new Chart(document.getElementById('regionPerformanceChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Kolkata', 'Mumbai', 'North', 'South', 'Vadodara'],
-                    datasets: [{
-                        label: 'Enquiries',
-                        data: [1.8, 2.2, 2.5, 2.0, 1.5],
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 5
-                    }, {
-                        label: 'Visits',
-                        data: [1.5, 1.8, 2.0, 1.8, 1.2],
-                        backgroundColor: '#8b5cf6',
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
+            window.addEventListener('click', (e) => {
+                if (e.target === addEnquiryModal) {
+                    enquiryForm.reset();
+                    addEnquiryModal.style.display = 'none';
                 }
             });
             
-            // Chart 5: CAM-wise Performance (Vertical Bar Chart with vertical scroller)
-            new Chart(document.getElementById('camPerformanceChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Rasalgethi Sharma', 'Yogesh Sharma', 'Sanjay Singh', 'Dwengyayu Tyawi', 'Prince Jha', 'Anuj Jain', 'Ankit Kumar Jha', 'Mankeno', 'Tukaram Gatawad', 'Medhak Bhat', 'John Doe', 'Jane Smith'],
-                    datasets: [{
-                        label: 'Enquiry Qty',
-                        data: [1.8, 1.6, 1.5, 1.4, 1.2, 1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5],
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 5
-                    }, {
-                        label: 'Visit Count',
-                        data: [1.5, 1.3, 1.2, 1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3],
-                        backgroundColor: '#8b5cf6',
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            stacked: false,
-                            title: {
-                                display: true,
-                                text: 'CAM'
+            const newCustomerNameInput = document.getElementById('new-customer-name');
+            const newCustomerCodeInput = document.getElementById('new-customer-code');
+            const newVisitCustomerNameInput = document.getElementById('new-visit-customer-name');
+            const newVisitCustomerCodeInput = document.getElementById('new-visit-customer-code');
+
+            const customerData = {
+                "VIKAS STEEL": "42034567898888",
+                "SAI SALES": "42034567898889",
+                "AVIRAJ STEEL": "42034567898890",
+                "SSNS": "42034567898891",
+                "OYUUH": "42034567898892"
+            };
+
+            newCustomerNameInput.addEventListener('change', () => {
+                const customerName = newCustomerNameInput.value;
+                if (customerData[customerName]) {
+                    newCustomerCodeInput.value = customerData[customerName];
+                } else {
+                    newCustomerCodeInput.value = "";
+                }
+            });
+            
+            newVisitCustomerNameInput.addEventListener('change', () => {
+                const customerName = newVisitCustomerNameInput.value;
+                if (customerData[customerName]) {
+                    newVisitCustomerCodeInput.value = customerData[customerName];
+                } else {
+                    newVisitCustomerCodeInput.value = "";
+                }
+            });
+
+            enquiryForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newEnquiry = {
+                    customerName: newCustomerNameInput.value,
+                    customerCode: newCustomerCodeInput.value,
+                    camName: document.getElementById('new-cam-name').value,
+                    region: document.getElementById('new-region').value,
+                    date: document.getElementById('new-date').value,
+                    status: 'NEUTRAL',
+                    originalStatus: 'NEUTRAL',
+                    grade: document.getElementById('new-grade').value,
+                    width: document.getElementById('new-width').value,
+                    finish: document.getElementById('new-finish').value,
+                    thickness: document.getElementById('new-thickness').value,
+                    segment: document.getElementById('new-segment').value,
+                    enquiryQty: document.getElementById('new-enquiry-qty').value,
+                    enqQtyForStatus: '',
+                    reasonForLoss: '',
+                    remarks: document.getElementById('new-remarks').value
+                };
+
+                const currentData = loadEnquiriesFromLocalStorage();
+                currentData.push(newEnquiry);
+                localStorage.setItem('enquiriesData', JSON.stringify(currentData));
+                renderEnquiriesTable(currentData);
+                attachEnquiriesTableListeners();
+                
+                enquiryForm.reset();
+                addEnquiryModal.style.display = 'none';
+            });
+            
+            function updateStatusSelectColor(selectElement) {
+                const status = selectElement.value;
+                selectElement.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-yellow-100', 'text-yellow-800', 'bg-gray-100', 'text-gray-800');
+                if (status === 'CONVERTED') {
+                    selectElement.classList.add('bg-green-100', 'text-green-800');
+                } else if (status === 'LOST') {
+                    selectElement.classList.add('bg-red-100', 'text-red-800');
+                } else if (status === 'INPROCESS') {
+                    selectElement.classList.add('bg-yellow-100', 'text-yellow-800');
+                } else {
+                    selectElement.classList.add('bg-gray-100', 'text-gray-800');
+                }
+            }
+
+            function handleStatusChange(event) {
+                const selectElement = event.target;
+                const newStatus = selectElement.value;
+                const originalStatus = selectElement.getAttribute('data-original-status');
+                currentRowToUpdate = selectElement.closest('tr');
+
+                const enquiryQtyCell = currentRowToUpdate.cells[12];
+                const enqQtyForStatusCell = currentRowToUpdate.cells[13];
+                const remarksCell = currentRowToUpdate.cells[15];
+                const reasonSelectInTable = currentRowToUpdate.querySelector('.reason-loss-select');
+
+                updateEnquiryQtyInput.value = enquiryQtyCell.textContent;
+                updateEnqQtyForStatusInput.value = enqQtyForStatusCell.textContent;
+                updateRemarksInput.value = remarksCell.textContent;
+                updateReasonSelect.value = reasonSelectInTable.value;
+
+                if (newStatus === 'LOST') {
+                    reasonLostGroup.classList.remove('hidden');
+                } else {
+                    reasonLostGroup.classList.add('hidden');
+                }
+                
+                updateModalTitle.textContent = `Update to ${newStatus}`;
+                updateStatusModal.style.display = 'flex';
+            }
+
+            function attachEnquiriesTableListeners() {
+                const statusSelects = document.querySelectorAll('.status-select');
+                statusSelects.forEach(select => {
+                    select.removeEventListener('change', handleStatusChange);
+                    select.addEventListener('change', handleStatusChange);
+                    updateStatusSelectColor(select);
+                });
+
+                selectAllCheckbox.removeEventListener('change', handleSelectAllChange);
+                selectAllCheckbox.addEventListener('change', handleSelectAllChange);
+
+                const individualCheckboxes = enquiriesTableBody.querySelectorAll('input[type="checkbox"]');
+                individualCheckboxes.forEach(checkbox => {
+                    checkbox.removeEventListener('change', handleIndividualCheckboxChange);
+                    checkbox.addEventListener('change', handleIndividualCheckboxChange);
+                });
+            }
+
+            updateStatusForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const enqQtyForStatus = updateEnqQtyForStatusInput.value;
+                const reasonForLoss = updateReasonSelect.value;
+                const remarks = updateRemarksInput.value;
+                const newStatus = currentRowToUpdate.querySelector('.status-select').value;
+                
+                if (currentRowToUpdate) {
+                    const statusSelect = currentRowToUpdate.querySelector('.status-select');
+                    
+                    statusSelect.setAttribute('data-original-status', newStatus);
+                    updateStatusSelectColor(statusSelect);
+                    
+                    currentRowToUpdate.cells[13].textContent = enqQtyForStatus;
+                    currentRowToUpdate.cells[15].textContent = remarks;
+
+                    const reasonSelectInTable = currentRowToUpdate.querySelector('.reason-loss-select');
+                    if (newStatus === 'LOST') {
+                        reasonSelectInTable.value = reasonForLoss;
+                        reasonSelectInTable.disabled = false;
+                    } else {
+                        reasonSelectInTable.value = '';
+                        reasonSelectInTable.disabled = true;
+                    }
+                }
+                
+                updateStatusModal.style.display = 'none';
+                currentRowToUpdate = null;
+            });
+
+            cancelUpdateBtn.addEventListener('click', () => {
+                if (currentRowToUpdate) {
+                    const statusSelect = currentRowToUpdate.querySelector('.status-select');
+                    const originalStatus = statusSelect.getAttribute('data-original-status');
+                    statusSelect.value = originalStatus;
+                    updateStatusSelectColor(statusSelect);
+                }
+                updateStatusModal.style.display = 'none';
+                currentRowToUpdate = null;
+            });
+            
+            closeUpdateModalBtn.addEventListener('click', () => {
+                if (currentRowToUpdate) {
+                    const statusSelect = currentRowToUpdate.querySelector('.status-select');
+                    const originalStatus = statusSelect.getAttribute('data-original-status');
+                    statusSelect.value = originalStatus;
+                    updateStatusSelectColor(statusSelect);
+                }
+                updateStatusModal.style.display = 'none';
+                currentRowToUpdate = null;
+            });
+
+            window.addEventListener('click', (e) => {
+                if (e.target === updateStatusModal) {
+                    if (currentRowToUpdate) {
+                        const statusSelect = currentRowToUpdate.querySelector('.status-select');
+                        const originalStatus = statusSelect.getAttribute('data-original-status');
+                        statusSelect.value = originalStatus;
+                        updateStatusSelectColor(statusSelect);
+                    }
+                    updateStatusModal.style.display = 'none';
+                    currentRowToUpdate = null;
+                }
+            });
+
+            function handleSelectAllChange() {
+                const checkboxes = enquiriesTableBody.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            }
+
+            function handleIndividualCheckboxChange(e) {
+                const allCheckboxes = enquiriesTableBody.querySelectorAll('input[type="checkbox"]');
+                const allChecked = Array.from(allCheckboxes).every(checkbox => checkbox.checked);
+                selectAllCheckbox.checked = allChecked;
+            }
+
+            deleteBtn.addEventListener('click', () => {
+                const checkboxes = enquiriesTableBody.querySelectorAll('input[type="checkbox"]:checked');
+                checkboxes.forEach(checkbox => {
+                    if (checkbox !== selectAllCheckbox) {
+                        checkbox.closest('tr').remove();
+                    }
+                });
+                selectAllCheckbox.checked = false;
+                saveEnquiriesToLocalStorage();
+            });
+            
+            exportBtn.addEventListener('click', () => {
+                const table = document.getElementById('enquiriesTable');
+                const wb = XLSX.utils.table_to_book(table, { sheet: "Enquiries" });
+                XLSX.writeFile(wb, "Enquiries.xlsx");
+            });
+
+            saveBtn.addEventListener('click', () => {
+                saveEnquiriesToLocalStorage();
+            });
+            // --- End of Enquiry Page Functions ---
+
+
+            // --- New Visit Page Functions ---
+            addNewVisitBtn.addEventListener('click', () => {
+                visitForm.reset();
+                addVisitModal.style.display = 'flex';
+            });
+
+            closeVisitModalBtn.addEventListener('click', () => {
+                visitForm.reset();
+                addVisitModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (e) => {
+                if (e.target === addVisitModal) {
+                    visitForm.reset();
+                    addVisitModal.style.display = 'none';
+                }
+            });
+            
+            visitForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newVisit = {
+                    customerName: document.getElementById('new-visit-customer-name').value,
+                    customerCode: document.getElementById('new-visit-customer-code').value,
+                    camName: document.getElementById('new-visit-cam-name').value,
+                    region: document.getElementById('new-visit-region').value,
+                    city: document.getElementById('new-visit-city').value,
+                    scheduledDate: document.getElementById('new-visit-schedule-date').value,
+                    status: document.getElementById('new-visit-status').value,
+                    originalStatus: document.getElementById('new-visit-status').value,
+                    completionDate: "",
+                    remarks: document.getElementById('new-visit-remarks').value
+                };
+
+                const currentData = loadVisitsFromLocalStorage();
+                currentData.push(newVisit);
+                localStorage.setItem('visitsData', JSON.stringify(currentData));
+                renderVisitsTable(currentData);
+                attachVisitsTableListeners();
+                
+                visitForm.reset();
+                addVisitModal.style.display = 'none';
+            });
+
+            function updateVisitStatusSelectColor(selectElement) {
+                const status = selectElement.value;
+                selectElement.classList.remove('bg-gray-100', 'text-gray-800', 'bg-green-100', 'text-green-800');
+                if (status === 'SCHEDULED') {
+                    selectElement.classList.add('bg-gray-100', 'text-gray-800');
+                } else if (status === 'COMPLETED') {
+                    selectElement.classList.add('bg-green-100', 'text-green-800');
+                }
+            }
+
+            function handleVisitStatusChange(event) {
+                const selectElement = event.target;
+                const newStatus = selectElement.value;
+                const originalStatus = selectElement.getAttribute('data-original-status');
+                currentVisitRowToUpdate = selectElement.closest('tr');
+                
+                if (newStatus === 'COMPLETED' && originalStatus === 'SCHEDULED') {
+                    updateVisitStatusModal.style.display = 'flex';
+                } else {
+                    currentVisitRowToUpdate.cells[8].textContent = "";
+                    selectElement.setAttribute('data-original-status', newStatus);
+                    updateVisitStatusSelectColor(selectElement);
+                }
+            }
+
+            updateVisitStatusForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const completionDate = updateVisitCompletionDateInput.value;
+                
+                if (currentVisitRowToUpdate) {
+                    const statusSelect = currentVisitRowToUpdate.querySelector('.visit-status-select');
+                    statusSelect.setAttribute('data-original-status', 'COMPLETED');
+                    statusSelect.value = 'COMPLETED';
+                    updateVisitStatusSelectColor(statusSelect);
+                    currentVisitRowToUpdate.cells[8].textContent = completionDate;
+                }
+                
+                updateVisitStatusModal.style.display = 'none';
+                currentVisitRowToUpdate = null;
+            });
+            
+            cancelUpdateVisitBtn.addEventListener('click', () => {
+                if (currentVisitRowToUpdate) {
+                    const statusSelect = currentVisitRowToUpdate.querySelector('.visit-status-select');
+                    const originalStatus = statusSelect.getAttribute('data-original-status');
+                    statusSelect.value = originalStatus;
+                    updateVisitStatusSelectColor(statusSelect);
+                }
+                updateVisitStatusModal.style.display = 'none';
+                currentVisitRowToUpdate = null;
+            });
+
+            closeUpdateVisitModalBtn.addEventListener('click', () => {
+                if (currentVisitRowToUpdate) {
+                    const statusSelect = currentVisitRowToUpdate.querySelector('.visit-status-select');
+                    const originalStatus = statusSelect.getAttribute('data-original-status');
+                    statusSelect.value = originalStatus;
+                    updateVisitStatusSelectColor(statusSelect);
+                }
+                updateVisitStatusModal.style.display = 'none';
+                currentVisitRowToUpdate = null;
+            });
+
+            window.addEventListener('click', (e) => {
+                if (e.target === updateVisitStatusModal) {
+                    if (currentVisitRowToUpdate) {
+                        const statusSelect = currentVisitRowToUpdate.querySelector('.visit-status-select');
+                        const originalStatus = statusSelect.getAttribute('data-original-status');
+                        statusSelect.value = originalStatus;
+                        updateVisitStatusSelectColor(statusSelect);
+                    }
+                    updateVisitStatusModal.style.display = 'none';
+                    currentVisitRowToUpdate = null;
+                }
+            });
+
+            function attachVisitsTableListeners() {
+                const statusSelects = document.querySelectorAll('#visitsTableBody .visit-status-select');
+                statusSelects.forEach(select => {
+                    select.removeEventListener('change', handleVisitStatusChange);
+                    select.addEventListener('change', handleVisitStatusChange);
+                    updateVisitStatusSelectColor(select);
+                });
+                
+                selectAllVisitsCheckbox.removeEventListener('change', handleSelectAllVisitsChange);
+                selectAllVisitsCheckbox.addEventListener('change', handleSelectAllVisitsChange);
+
+                const individualVisitsCheckboxes = visitsTableBody.querySelectorAll('input[type="checkbox"]');
+                individualVisitsCheckboxes.forEach(checkbox => {
+                    checkbox.removeEventListener('change', handleIndividualVisitsCheckboxChange);
+                    checkbox.addEventListener('change', handleIndividualVisitsCheckboxChange);
+                });
+            }
+
+            function handleSelectAllVisitsChange() {
+                const checkboxes = visitsTableBody.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllVisitsCheckbox.checked;
+                });
+            }
+
+            function handleIndividualVisitsCheckboxChange(e) {
+                const allCheckboxes = visitsTableBody.querySelectorAll('input[type="checkbox"]');
+                const allChecked = Array.from(allCheckboxes).every(checkbox => checkbox.checked);
+                selectAllVisitsCheckbox.checked = allChecked;
+            }
+
+            deleteVisitsBtn.addEventListener('click', () => {
+                const checkboxes = visitsTableBody.querySelectorAll('input[type="checkbox"]:checked');
+                checkboxes.forEach(checkbox => {
+                    if (checkbox !== selectAllVisitsCheckbox) {
+                        checkbox.closest('tr').remove();
+                    }
+                });
+                selectAllVisitsCheckbox.checked = false;
+                saveVisitsToLocalStorage();
+            });
+
+            exportVisitsBtn.addEventListener('click', () => {
+                const table = document.getElementById('visitsTable');
+                const wb = XLSX.utils.table_to_book(table, { sheet: "Visits" });
+                XLSX.writeFile(wb, "Visits.xlsx");
+            });
+
+            saveVisitsBtn.addEventListener('click', () => {
+                saveVisitsToLocalStorage();
+            });
+
+            // --- End of New Visit Page Functions ---
+
+
+            // Initial UI state
+            const enquiriesDataToRender = loadEnquiriesFromLocalStorage();
+            renderEnquiriesTable(enquiriesDataToRender);
+            attachEnquiriesTableListeners();
+            updateUI('dashboard');
+
+            // Dummy data for charts
+            function setupCharts() {
+                const enquiriesVisitTrendCtx = document.getElementById('enquiriesVisitTrendChart').getContext('2d');
+                new Chart(enquiriesVisitTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                        datasets: [{
+                            label: 'Enquiries',
+                            data: [120, 150, 140, 170, 180, 200, 210],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }, {
+                            label: 'Visits',
+                            data: [100, 130, 125, 150, 160, 175, 190],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                const enquiryLossCtx = document.getElementById('enquiryLossChart').getContext('2d');
+                new Chart(enquiryLossCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['North', 'South', 'East', 'West'],
+                        datasets: [
+                            {
+                                label: 'Price Too High',
+                                data: [15, 10, 8, 12],
+                                backgroundColor: '#ef4444',
+                            },
+                            {
+                                label: 'Competitor Offer',
+                                data: [10, 8, 5, 9],
+                                backgroundColor: '#f97316',
+                            },
+                            {
+                                label: 'Product Not Suitable',
+                                data: [5, 6, 7, 4],
+                                backgroundColor: '#f59e0b',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Region'
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Enquiries'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                const lostReasonCtx = document.getElementById('lostReasonChart').getContext('2d');
+                new Chart(lostReasonCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Price Too High', 'Competitor Offer', 'Product Not Suitable', 'Other'],
+                        datasets: [{
+                            data: [45, 30, 15, 10],
+                            backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#6b7280'],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                            }
+                        }
+                    }
+                });
+
+                const regionPerformanceCtx = document.getElementById('regionPerformanceChart').getContext('2d');
+                new Chart(regionPerformanceCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['North', 'South', 'East', 'West'],
+                        datasets: [
+                            {
+                                label: 'Enquiry QTY',
+                                data: [500, 300, 200, 450],
+                                backgroundColor: '#3b82f6',
+                            },
+                            {
+                                label: 'Visits',
+                                data: [450, 250, 180, 400],
+                                backgroundColor: '#8b5cf6',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'Region'
+                                }
+                            },
+                            y: {
+                                stacked: false
                             }
                         },
-                        y: {
-                            stacked: false
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
                         }
                     }
-                }
-            });
-            
-            // Chart 6: Conversion Funnel (Horizontal Bar Chart)
-            new Chart(document.getElementById('conversionFunnelChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Enquiries', 'Visits', 'Converted', 'Orders'],
-                    datasets: [{
-                        data: [5, 4.5, 2.5, 1.2],
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y', // This is the key change to make it a horizontal bar chart
-                    plugins: { legend: { display: false } }
-                }
-            });
+                });
+
+                const camPerformanceCtx = document.getElementById('camPerformanceChart').getContext('2d');
+                new Chart(camPerformanceCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Yogesh Sharma', 'Tukaram Gatawad', 'Dwengyayu Tyawi', 'Mankeno', 'Ankit Kumar Jha', 'Anuj Jain', 'Medhak Bhat', 'Sanjay Singh', 'Prince Jha', 'Rasalgethi Sharma'],
+                        datasets: [
+                            {
+                                label: 'Enquiry QTY',
+                                data: [120, 110, 95, 80, 75, 70, 65, 60, 50, 45],
+                                backgroundColor: '#3b82f6',
+                            },
+                            {
+                                label: 'Visits',
+                                data: [110, 100, 90, 75, 70, 65, 60, 55, 45, 40],
+                                backgroundColor: '#8b5cf6',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'CAM'
+                                }
+                            },
+                            y: {
+                                stacked: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+
+                new Chart(document.getElementById('conversionFunnelChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Enquiries', 'Visits', 'Converted', 'Orders'],
+                        datasets: [{
+                            data: [5, 4.5, 2.5, 1.2],
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            };
+            setupCharts();
         });
     </script>
 </body>
